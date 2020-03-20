@@ -36,6 +36,8 @@ uint32_t flagPIT0 = 0;
 uint32_t flagPIT1 = 0;
 volatile uint8_t updatedDutycycle = 0;
 volatile uint8_t basePwm = 5;
+uint8_t counter = 0;
+uint32_t output = 0;
 
 void PIT_DriverIRQHandler(void);
 void configPit(void);
@@ -47,6 +49,140 @@ void configAdc(adc16_channel_config_t* adc16ChannelConfigStruct);
 uint16_t readAdc(adc16_channel_config_t adc16ChannelConfigStruct);
 uint8_t speedPwm(uint16_t valueAdc, uint8_t* countPwm, bool* increment);
 uint8_t speedPwmDecrement(uint16_t valueAdc,uint8_t* countPwm, bool* increment);
+
+#define MIN_COUNT_ENABLE 1 //RELACIONADO CON LA VELOCIDAD DE PULSACION
+#define MIN_COUNT_DIS 3
+
+
+typedef enum
+{
+
+	DISABLE = 1,
+	COUNT_ENABLE,
+	ENABLE,
+	COUNT_DIS,
+
+}DEBOUNCE_STATES;
+
+
+
+DEBOUNCE_STATES curr_state = DISABLE;
+DEBOUNCE_STATES Next_state = DISABLE;
+
+void antiBounceButton(GPIO_Type *base, uint32_t pinLeer);  //Prototype function
+
+void antiBounceButton(GPIO_Type *base, uint32_t pinLeer)
+{
+
+	switch(curr_state)
+	{
+
+	case DISABLE:
+
+		PRINTF("STATE DISABLE\n");
+
+		if(GPIO_ReadPinInput(base , pinLeer) )
+		{
+			Next_state = COUNT_ENABLE;
+			counter = 0;
+			output=DISABLE;
+		}
+
+		else
+		{
+			Next_state = DISABLE;
+		}
+
+		break;
+
+	case COUNT_ENABLE:
+
+		PRINTF("STATE COUNT_ENABLE\n");
+
+		if(GPIO_ReadPinInput(base , pinLeer) )
+		{
+			counter++;
+
+			if(counter >= MIN_COUNT_ENABLE)
+			{
+				Next_state = ENABLE;
+				output = ENABLE;
+			}
+
+			else
+			{
+				Next_state = COUNT_ENABLE;
+				output = DISABLE;
+			}
+
+		}
+
+		else
+		{
+			Next_state = DISABLE;
+			counter = 0;
+			output = DISABLE;
+		}
+
+		break;
+
+	case ENABLE:
+
+		PRINTF("STATE ENABLE\n");
+
+		if(!(GPIO_ReadPinInput(base , pinLeer)) ) //INPUT = LOW
+		{
+			counter = 0;
+			output = ENABLE;
+			Next_state = COUNT_DIS;
+
+		}
+
+		break;
+
+	case COUNT_DIS:
+
+		PRINTF("STATE COUNT_DIS\n");
+
+		if(!(GPIO_ReadPinInput(base , pinLeer)) ) //INPUT = LOW
+		{
+
+			counter++;
+
+			if(counter >= MIN_COUNT_DIS)
+			{
+				Next_state = DISABLE;
+				output = DISABLE;
+			}
+
+			else
+			{
+				output = ENABLE;
+				Next_state = COUNT_DIS;
+			}
+
+
+		}
+
+		else
+		{
+			counter = 0;
+			Next_state = ENABLE;
+			output = ENABLE;
+		}
+
+		break;
+
+
+	default:
+		break;
+
+
+	}
+
+	curr_state = Next_state;
+
+}
 
 
 void PIT_DriverIRQHandler(void)
@@ -372,7 +508,11 @@ int main(void) {
 
     char buf[TAM_CADENA +1];
 
+    unsigned char stateLed = 1; // 0 = LED OFF | 1 = LED ON
+
 	while(1) {
+
+		//antiBounceButton(PTB, 1); //Anti-Bounce of the PIN PTB1
 
 		if(flagPIT0) //SHOW ON UART EVERY 1 SECOND
 		{
