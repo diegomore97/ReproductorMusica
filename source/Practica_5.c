@@ -11,6 +11,7 @@
 #include "fsl_uart.h"
 #include "fsl_adc16.h"
 #include "fsl_tpm.h"
+#include "debounce.h"
 
 
 #define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
@@ -39,6 +40,7 @@ volatile uint8_t basePwm = 5;
 uint8_t counter = 0;
 uint32_t output = 0;
 
+
 void PIT_DriverIRQHandler(void);
 void configPit(void);
 void configPit_2(void);
@@ -49,141 +51,6 @@ void configAdc(adc16_channel_config_t* adc16ChannelConfigStruct);
 uint16_t readAdc(adc16_channel_config_t adc16ChannelConfigStruct);
 uint8_t speedPwm(uint16_t valueAdc, uint8_t* countPwm, bool* increment);
 uint8_t speedPwmDecrement(uint16_t valueAdc,uint8_t* countPwm, bool* increment);
-
-#define MIN_COUNT_ENABLE 1 //RELACIONADO CON LA VELOCIDAD DE PULSACION
-#define MIN_COUNT_DIS 3
-
-
-typedef enum
-{
-
-	DISABLE = 1,
-	COUNT_ENABLE,
-	ENABLE,
-	COUNT_DIS,
-
-}DEBOUNCE_STATES;
-
-
-
-DEBOUNCE_STATES curr_state = DISABLE;
-DEBOUNCE_STATES Next_state = DISABLE;
-
-void antiBounceButton(GPIO_Type *base, uint32_t pinLeer);  //Prototype function
-
-void antiBounceButton(GPIO_Type *base, uint32_t pinLeer)
-{
-
-	switch(curr_state)
-	{
-
-	case DISABLE:
-
-		PRINTF("STATE DISABLE\n");
-
-		if(GPIO_ReadPinInput(base , pinLeer) )
-		{
-			Next_state = COUNT_ENABLE;
-			counter = 0;
-			output=DISABLE;
-		}
-
-		else
-		{
-			Next_state = DISABLE;
-		}
-
-		break;
-
-	case COUNT_ENABLE:
-
-		PRINTF("STATE COUNT_ENABLE\n");
-
-		if(GPIO_ReadPinInput(base , pinLeer) )
-		{
-			counter++;
-
-			if(counter >= MIN_COUNT_ENABLE)
-			{
-				Next_state = ENABLE;
-				output = ENABLE;
-			}
-
-			else
-			{
-				Next_state = COUNT_ENABLE;
-				output = DISABLE;
-			}
-
-		}
-
-		else
-		{
-			Next_state = DISABLE;
-			counter = 0;
-			output = DISABLE;
-		}
-
-		break;
-
-	case ENABLE:
-
-		PRINTF("STATE ENABLE\n");
-
-		if(!(GPIO_ReadPinInput(base , pinLeer)) ) //INPUT = LOW
-		{
-			counter = 0;
-			output = ENABLE;
-			Next_state = COUNT_DIS;
-
-		}
-
-		break;
-
-	case COUNT_DIS:
-
-		PRINTF("STATE COUNT_DIS\n");
-
-		if(!(GPIO_ReadPinInput(base , pinLeer)) ) //INPUT = LOW
-		{
-
-			counter++;
-
-			if(counter >= MIN_COUNT_DIS)
-			{
-				Next_state = DISABLE;
-				output = DISABLE;
-			}
-
-			else
-			{
-				output = ENABLE;
-				Next_state = COUNT_DIS;
-			}
-
-
-		}
-
-		else
-		{
-			counter = 0;
-			Next_state = ENABLE;
-			output = ENABLE;
-		}
-
-		break;
-
-
-	default:
-		break;
-
-
-	}
-
-	curr_state = Next_state;
-
-}
-
 
 void PIT_DriverIRQHandler(void)
 {
@@ -213,16 +80,16 @@ void configPwm(void)
 	tpmParam.level = pwmLevel;
 	tpmParam.dutyCyclePercent = updatedDutycycle;
 
-    /* Select the clock source for the TPM counter as kCLOCK_PllFllSelClk */
-    CLOCK_SetTpmClock(1U);
+	/* Select the clock source for the TPM counter as kCLOCK_PllFllSelClk */
+	CLOCK_SetTpmClock(1U);
 
-    TPM_GetDefaultConfig(&tpmInfo);
-    /* Initialize TPM module */
-    TPM_Init(BOARD_TPM_BASEADDR, &tpmInfo);
+	TPM_GetDefaultConfig(&tpmInfo);
+	/* Initialize TPM module */
+	TPM_Init(BOARD_TPM_BASEADDR, &tpmInfo);
 
-    TPM_SetupPwm(BOARD_TPM_BASEADDR, &tpmParam, 1U, kTPM_CenterAlignedPwm, 24000U, TPM_SOURCE_CLOCK);
+	TPM_SetupPwm(BOARD_TPM_BASEADDR, &tpmParam, 1U, kTPM_CenterAlignedPwm, 24000U, TPM_SOURCE_CLOCK);
 
-    TPM_StartTimer(BOARD_TPM_BASEADDR, kTPM_SystemClock);
+	TPM_StartTimer(BOARD_TPM_BASEADDR, kTPM_SystemClock);
 
 }
 
@@ -270,20 +137,20 @@ void configUart(void)
 {
 	uart_config_t config;
 
-    /*
-      * config.baudRate_Bps = 115200U;
-      * config.parityMode = kUART_ParityDisabled;
-      * config.stopBitCount = kUART_OneStopBit;
-      * config.txFifoWatermark = 0;
-      * config.rxFifoWatermark = 1;
-      * config.enableTx = false;
-      * config.enableRx = false;
-      */
-     UART_GetDefaultConfig(&config);
-     config.enableTx = true;
-     config.enableRx = true;
+	/*
+	 * config.baudRate_Bps = 115200U;
+	 * config.parityMode = kUART_ParityDisabled;
+	 * config.stopBitCount = kUART_OneStopBit;
+	 * config.txFifoWatermark = 0;
+	 * config.rxFifoWatermark = 1;
+	 * config.enableTx = false;
+	 * config.enableRx = false;
+	 */
+	UART_GetDefaultConfig(&config);
+	config.enableTx = true;
+	config.enableRx = true;
 
-     UART_Init(UART1, &config, DEMO_UART_CLK_FREQ);
+	UART_Init(UART1, &config, DEMO_UART_CLK_FREQ);
 
 }
 
@@ -294,25 +161,25 @@ void configAdc(adc16_channel_config_t* adc16ChannelConfigStruct )
 	ADC16_GetDefaultConfig(&adc16ConfigStruct);
 
 #ifdef BOARD_ADC_USE_ALT_VREF
-    adc16ConfigStruct.referenceVoltageSource = kADC16_ReferenceVoltageSourceValt;
+	adc16ConfigStruct.referenceVoltageSource = kADC16_ReferenceVoltageSourceValt;
 #endif
-    ADC16_Init(DEMO_ADC16_BASE, &adc16ConfigStruct);
-    ADC16_EnableHardwareTrigger(DEMO_ADC16_BASE, false); /* Make sure the software trigger is used. */
+	ADC16_Init(DEMO_ADC16_BASE, &adc16ConfigStruct);
+	ADC16_EnableHardwareTrigger(DEMO_ADC16_BASE, false); /* Make sure the software trigger is used. */
 #if defined(FSL_FEATURE_ADC16_HAS_CALIBRATION) && FSL_FEATURE_ADC16_HAS_CALIBRATION
-    if (kStatus_Success == ADC16_DoAutoCalibration(DEMO_ADC16_BASE))
-    {
-        PRINTF("ADC16_DoAutoCalibration() Done.\r\n");
-    }
-    else
-    {
-        PRINTF("ADC16_DoAutoCalibration() Failed.\r\n");
-    }
+	if (kStatus_Success == ADC16_DoAutoCalibration(DEMO_ADC16_BASE))
+	{
+		PRINTF("ADC16_DoAutoCalibration() Done.\r\n");
+	}
+	else
+	{
+		PRINTF("ADC16_DoAutoCalibration() Failed.\r\n");
+	}
 #endif /* FSL_FEATURE_ADC16_HAS_CALIBRATION */
 
-    (*adc16ChannelConfigStruct).channelNumber = DEMO_ADC16_USER_CHANNEL;
-    (*adc16ChannelConfigStruct).enableInterruptOnConversionCompleted = false;
+	(*adc16ChannelConfigStruct).channelNumber = DEMO_ADC16_USER_CHANNEL;
+	(*adc16ChannelConfigStruct).enableInterruptOnConversionCompleted = false;
 #if defined(FSL_FEATURE_ADC16_HAS_DIFF_MODE) && FSL_FEATURE_ADC16_HAS_DIFF_MODE
-    (*adc16ChannelConfigStruct).enableDifferentialConversion = false;
+	(*adc16ChannelConfigStruct).enableDifferentialConversion = false;
 #endif /* FSL_FEATURE_ADC16_HAS_DIFF_MODE */
 
 	ADC16_SetChannelConfig(DEMO_ADC16_BASE, DEMO_ADC16_CHANNEL_GROUP, adc16ChannelConfigStruct);
@@ -331,17 +198,17 @@ uint16_t readAdc(adc16_channel_config_t adc16ChannelConfigStruct)
 
 void outputPwm(uint8_t dutyCyclePwm, tpm_pwm_level_select_t pwmLevel)
 {
-    updatedDutycycle = dutyCyclePwm;
+	updatedDutycycle = dutyCyclePwm;
 
-    /* Disable channel output before updating the dutycycle */
-    TPM_UpdateChnlEdgeLevelSelect(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, 0U);
+	/* Disable channel output before updating the dutycycle */
+	TPM_UpdateChnlEdgeLevelSelect(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, 0U);
 
-    /* Update PWM duty cycle */
-    TPM_UpdatePwmDutycycle(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, kTPM_CenterAlignedPwm,
-                           updatedDutycycle);
+	/* Update PWM duty cycle */
+	TPM_UpdatePwmDutycycle(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, kTPM_CenterAlignedPwm,
+			updatedDutycycle);
 
-    /* Start channel output with updated dutycycle */
-    TPM_UpdateChnlEdgeLevelSelect(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, pwmLevel);
+	/* Start channel output with updated dutycycle */
+	TPM_UpdateChnlEdgeLevelSelect(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, pwmLevel);
 
 }
 
@@ -349,64 +216,64 @@ uint8_t speedPwm(uint16_t valueAdc,uint8_t* countPwm, bool* increment)
 {
 	uint8_t basePwmActual;
 
-  if(valueAdc >= 0 && valueAdc < 500)
-  {
-	  basePwmActual = 5;
-  }
+	if(valueAdc >= 0 && valueAdc < 500)
+	{
+		basePwmActual = 5;
+	}
 
-  else if(valueAdc >= 500 && valueAdc < 1000)
-  {
-	  basePwmActual = 10;
-  }
+	else if(valueAdc >= 500 && valueAdc < 1000)
+	{
+		basePwmActual = 10;
+	}
 
-  else if(valueAdc >= 1000 && valueAdc < 1500)
-  {
-	  basePwmActual = 15;
-  }
+	else if(valueAdc >= 1000 && valueAdc < 1500)
+	{
+		basePwmActual = 15;
+	}
 
-  else if(valueAdc >= 1500 && valueAdc < 2000)
-  {
-	  basePwmActual = 20;
-  }
+	else if(valueAdc >= 1500 && valueAdc < 2000)
+	{
+		basePwmActual = 20;
+	}
 
-  else if(valueAdc >= 2000 && valueAdc < 2500)
-  {
-	  basePwmActual = 25;
-  }
+	else if(valueAdc >= 2000 && valueAdc < 2500)
+	{
+		basePwmActual = 25;
+	}
 
-  else if(valueAdc >= 2500 && valueAdc < 3000)
-  {
-	  basePwmActual = 30;
-  }
+	else if(valueAdc >= 2500 && valueAdc < 3000)
+	{
+		basePwmActual = 30;
+	}
 
-  else if(valueAdc >= 3000 && valueAdc < 3500)
-  {
-	  basePwmActual = 35;
-  }
+	else if(valueAdc >= 3000 && valueAdc < 3500)
+	{
+		basePwmActual = 35;
+	}
 
-  else if(valueAdc >= 3500 && valueAdc < 4000)
-  {
-	  basePwmActual = 40;
-  }
+	else if(valueAdc >= 3500 && valueAdc < 4000)
+	{
+		basePwmActual = 40;
+	}
 
-  else
-  {
-	  basePwmActual = 50;
-  }
+	else
+	{
+		basePwmActual = 50;
+	}
 
-  *countPwm += basePwmActual;
+	*countPwm += basePwmActual;
 
-  if(*countPwm >= 100)
-  {
-	  *countPwm = 100;
-	  *increment = false;
-  }
-  else
-  {
+	if(*countPwm >= 100)
+	{
+		*countPwm = 100;
+		*increment = false;
+	}
+	else
+	{
 
-  }
+	}
 
-  return *countPwm;
+	return *countPwm;
 
 }
 
@@ -415,76 +282,76 @@ uint8_t speedPwmDecrement(uint16_t valueAdc,uint8_t* countPwm, bool* increment)
 	uint8_t basePwmActual;
 	int aux = *countPwm;
 
-  if(valueAdc >= 0 && valueAdc < 500)
-  {
-	  basePwmActual = 5;
-  }
+	if(valueAdc >= 0 && valueAdc < 500)
+	{
+		basePwmActual = 5;
+	}
 
-  else if(valueAdc >= 500 && valueAdc < 1000)
-  {
-	  basePwmActual = 10;
-  }
+	else if(valueAdc >= 500 && valueAdc < 1000)
+	{
+		basePwmActual = 10;
+	}
 
-  else if(valueAdc >= 1000 && valueAdc < 1500)
-  {
-	  basePwmActual = 15;
-  }
+	else if(valueAdc >= 1000 && valueAdc < 1500)
+	{
+		basePwmActual = 15;
+	}
 
-  else if(valueAdc >= 1500 && valueAdc < 2000)
-  {
-	  basePwmActual = 20;
-  }
+	else if(valueAdc >= 1500 && valueAdc < 2000)
+	{
+		basePwmActual = 20;
+	}
 
-  else if(valueAdc >= 2000 && valueAdc < 2500)
-  {
-	  basePwmActual = 25;
-  }
+	else if(valueAdc >= 2000 && valueAdc < 2500)
+	{
+		basePwmActual = 25;
+	}
 
-  else if(valueAdc >= 2500 && valueAdc < 3000)
-  {
-	  basePwmActual = 30;
-  }
+	else if(valueAdc >= 2500 && valueAdc < 3000)
+	{
+		basePwmActual = 30;
+	}
 
-  else if(valueAdc >= 3000 && valueAdc < 3500)
-  {
-	  basePwmActual = 35;
-  }
+	else if(valueAdc >= 3000 && valueAdc < 3500)
+	{
+		basePwmActual = 35;
+	}
 
-  else if(valueAdc >= 3500 && valueAdc < 4000)
-  {
-	  basePwmActual = 40;
-  }
+	else if(valueAdc >= 3500 && valueAdc < 4000)
+	{
+		basePwmActual = 40;
+	}
 
-  else
-  {
-	  basePwmActual = 50;
-  }
+	else
+	{
+		basePwmActual = 50;
+	}
 
-  aux -= basePwmActual;
+	aux -= basePwmActual;
 
-  if((aux) <= 0)
-  {
-	  aux = 0;
-	  *increment = true;
-  }
-  else
-  {
+	if((aux) <= 0)
+	{
+		aux = 0;
+		*increment = true;
+	}
+	else
+	{
 
-  }
+	}
 
-  *countPwm = aux;
+	*countPwm = aux;
 
-  return *countPwm;
+	return *countPwm;
 
 }
 
 int main(void) {
 
-    uint16_t valueAdc = 0;
-    uint8_t dutyCyclePwm = 0;
-    uint8_t countPwm = 0;
-    bool increment = true;
-    char prueba[] ="BIENVENIDO\n\n";
+	uint16_t valueAdc = 0;
+	uint8_t dutyCyclePwm = 0;
+	uint8_t countPwm = 0;
+	bool increment = true;
+	char prueba[] ="BIENVENIDO\n\n";
 
 	adc16_channel_config_t adc16ChannelConfigStruct;
 
@@ -498,21 +365,33 @@ int main(void) {
 	//PRINTF("Hello World\n");  //Test UART0 Debug
 
 	configUart();  //UART1
-    configPit();   //Timer0
-    configPit_2(); //Timer0 for ADC
-    configAdc(&adc16ChannelConfigStruct);   // Adc
-    configPwm(); //PWM
+	configPit();   //Timer0
+	configPit_2(); //Timer0 for ADC
+	configAdc(&adc16ChannelConfigStruct);   // Adc
+	configPwm(); //PWM
 
-    UART_WriteBlockingString(UART1, prueba); //UART0 TERMINAL
+	UART_WriteBlockingString(UART1, prueba); //UART0 TERMINAL
 
 
-    char buf[TAM_CADENA +1];
+	char buf[TAM_CADENA +1];
 
-    unsigned char stateLed = 1; // 0 = LED OFF | 1 = LED ON
+	unsigned char stateLed = 1; // 0 = LED OFF | 1 = LED ON
+
+	PinDebounce pb1; //Variable que guardara la configuracion para la maquina de estados de ese boton PTB1
+	initPinDebounce(&pb1 , 1, 3); //Inicializar configuracion | Parametros 1 y 3 relacionados con la velocidad de pulsado
+
 
 	while(1) {
 
-		//antiBounceButton(PTB, 1); //Anti-Bounce of the PIN PTB1
+		if(antiBounceButton(PTB, 1, &pb1)) //Anti-Bounce of the PIN PTB1 | Preguntar si el PTB1 recibio pulso en alto
+		{
+
+		}
+
+		else
+		{
+
+		}
 
 		if(flagPIT0) //SHOW ON UART EVERY 1 SECOND
 		{
@@ -520,14 +399,14 @@ int main(void) {
 			flagPIT0 = 0;
 
 			sprintf(buf, "Valor ADC = %d | Valor PWM = %d\n", valueAdc, dutyCyclePwm);
-    		UART_WriteBlockingString(UART1, buf); //UART1 TERMINAL
-    		//PRINTF("%s\n", buf); //UART0 DEBUG TERMINAL
+			UART_WriteBlockingString(UART1, buf); //UART1 TERMINAL
+			//PRINTF("%s\n", buf); //UART0 DEBUG TERMINAL
 
 		}
 
 		else if(flagPIT1) //READ ADC EVERY 200 MILISEGUNDS
 		{
-           flagPIT1 = 0;
+			flagPIT1 = 0;
 
 			valueAdc = readAdc(adc16ChannelConfigStruct);
 
