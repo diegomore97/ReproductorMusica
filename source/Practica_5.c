@@ -12,6 +12,7 @@
 #include "fsl_adc16.h"
 #include "fsl_tpm.h"
 #include "debounce.h"
+#include "rotabit.h"
 
 
 #define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
@@ -40,7 +41,6 @@ volatile uint8_t basePwm = 5;
 uint8_t counter = 0;
 uint32_t output = 0;
 
-
 void PIT_DriverIRQHandler(void);
 void configPit(void);
 void configPit_2(void);
@@ -51,6 +51,7 @@ void configAdc(adc16_channel_config_t* adc16ChannelConfigStruct);
 uint16_t readAdc(adc16_channel_config_t adc16ChannelConfigStruct);
 uint8_t speedPwm(uint16_t valueAdc, uint8_t* countPwm, bool* increment);
 uint8_t speedPwmDecrement(uint16_t valueAdc,uint8_t* countPwm, bool* increment);
+
 
 void PIT_DriverIRQHandler(void)
 {
@@ -378,8 +379,10 @@ int main(void) {
 	unsigned char stateLed = 1; // 0 = LED OFF | 1 = LED ON
 
 	PinDebounce pb1; //Variable que guardara la configuracion para la maquina de estados de ese boton PTB1
-	initPinDebounce(&pb1 , 1, 3); //Inicializar configuracion | Parametros 1 y 3 relacionados con la velocidad de pulsado
+	Port_Rotabit PB;
 
+	initPinDebounce(&pb1 , 1, 3); //Inicializar configuracion | Parametros 1 y 3 relacionados con la velocidad de pulsado
+	initPortRotabit(&PB, 4);
 
 	while(1) {
 
