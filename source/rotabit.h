@@ -95,26 +95,19 @@ void rotabitRing(GPIO_Type *base, Port_Rotabit* p)
 	case START:
 
 		//PRINTF("ROTABIT: STATE START\n");
-
-		if (!p->counter) {
-			p->counter = 1;
-			p->Next_state = ROTATE;
-		}
+		p->counter = 1;
+		p->Next_state = ROTATE;
 
 		break;
 
 	case ROTATE:
 
 		//PRINTF("ROTABIT: STATE ROTATE\n");
+		p->counter = p->counter << 1;
+		p->Next_state = ROTATE;
 
-		if (p->counter >= p->maxBits){
-			p->counter = 0;
+		if (p->counter >= p->maxBits)
 			p->Next_state = START;
-		}
-		else{
-			p->counter = p->counter << 1;
-			p->Next_state = ROTATE;
-		}
 
 		break;
 

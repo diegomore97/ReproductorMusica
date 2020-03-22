@@ -354,7 +354,7 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 	case PLAY:
 		PRINTF("Reproduciendo Cancion\n");
-		//rotabitRing(base, p);
+		rotabitRing(base, p);
 		break;
 
 	case PAUSE:
@@ -459,7 +459,7 @@ int main(void) {
 
 		if(flagPIT0){
 
-			sistemaPrincipal(&b1, PTB, &PD);
+			sistemaPrincipal(&b1, PTD, &PD);
 			flagPIT0 = 0;
 
 		}
