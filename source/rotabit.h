@@ -19,7 +19,7 @@ typedef struct
 	uint8_t counter;
 	ROTABIT_STATES curr_state;
 	ROTABIT_STATES Next_state;
-	uint8_t maxBits;
+	uint8_t maxBits; //MAXIMO 8 BITS
 
 }Port_Rotabit;
 

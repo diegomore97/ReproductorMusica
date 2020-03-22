@@ -13,6 +13,7 @@
 #include "fsl_tpm.h"
 #include "debounce.h"
 #include "rotabit.h"
+#include "controlBotones.h"
 
 
 #define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
@@ -51,7 +52,7 @@ void configAdc(adc16_channel_config_t* adc16ChannelConfigStruct);
 uint16_t readAdc(adc16_channel_config_t adc16ChannelConfigStruct);
 uint8_t speedPwm(uint16_t valueAdc, uint8_t* countPwm, bool* increment);
 uint8_t speedPwmDecrement(uint16_t valueAdc,uint8_t* countPwm, bool* increment);
-
+void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p);
 
 void PIT_DriverIRQHandler(void)
 {
@@ -102,7 +103,7 @@ void configPit(void)
 
 	PIT_Init(PIT, &My_PIT);
 
-	PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
 
 	PIT_EnableInterrupts(PIT, kPIT_Chnl_0, kPIT_TimerInterruptEnable );
 
@@ -122,7 +123,7 @@ void configPit_2(void)
 
 	PIT_Init(PIT, &My_PIT_2);
 
-	PIT_SetTimerPeriod(PIT, kPIT_Chnl_1,MSEC_TO_COUNT(200, PIT_CLK_SRC_HZ_HP));
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_1,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
 
 	PIT_EnableInterrupts(PIT, kPIT_Chnl_1, kPIT_TimerInterruptEnable );
 
@@ -346,6 +347,30 @@ uint8_t speedPwmDecrement(uint16_t valueAdc,uint8_t* countPwm, bool* increment)
 
 }
 
+void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
+{
+	switch(b->curr_state)
+	{
+
+	case PLAY:
+		PRINTF("Reproduciendo Cancion\n");
+		rotabitRing(base, p);
+		break;
+
+	case PAUSE:
+		break;
+
+	case STOP:
+		base->PDDR = 0; //STOP
+		break;
+
+	default:
+		break;
+	}
+
+
+}
+
 int main(void) {
 
 	uint16_t valueAdc = 0;
@@ -367,16 +392,11 @@ int main(void) {
 
 	configUart();  //UART1
 	configPit();   //Timer0
-	configPit_2(); //Timer0 for ADC
+	//configPit_2(); //Timer0 for ADC
 	configAdc(&adc16ChannelConfigStruct);   // Adc
 	configPwm(); //PWM
 
 	UART_WriteBlockingString(UART1, prueba); //UART0 TERMINAL
-
-
-	char buf[TAM_CADENA +1];
-
-	unsigned char stateRotaBit = 1; // 0 = LEDS OFF | 1 = LEDS ON
 
 	PinDebounce pb0, pb1, pb2; //Variable que guardara la configuracion para la maquina de estados de ese boton PTB1
 	Port_Rotabit PD;
@@ -392,52 +412,62 @@ int main(void) {
 
 	initPortRotabit(&PD, 3); //Numero de leds | Asegurese que los pines de las puerto esten configurados como salidas en LOGICA 1
 
+	BotonControl b1, b2, b3;
+
+	//Inicializando Maquinas de estado de los botones a utilizar
+	initBoton(&b1);
+	initBoton(&b2);
+	initBoton(&b3);
+
 	//Inicializando Puerto
 
 	PTD->PDDR = 0;
 
 	while(1) {
 
-		if(flagPIT0){
+		if(!(GPIO_ReadPinInput(PTB, 0) ) ){  //PTB0 recibio un pulso en bajo
 
-			if(stateRotaBit)
-			{
-				rotabitRing(PTD, &PD);
-			}
-			else
-			{
-				rotabitRingInvert(PTD,&PD);
-			}
-
-			flagPIT0 = 0;
-
-
-
-			if(antiBounceButtonPullUp(PTB, 0, &pb0)) //Anti-Bounce of the PIN PTB1 | Preguntar si el PTB1 recibio pulso en bajo
-			{
-				if(stateRotaBit)
-				{
-					stateRotaBit = 0; //TOGGLE
-
-				}
-
-
-				else
-				{
-
-					stateRotaBit = 1; //TOGGLE
-				}
-
-			}
+			antiBounceButtonPullUp(PTB, 0, &pb0); //Ya termino el antirrebote?
+			PRINTF("BOTON 1 PRESIONADO\n");
+			controlBoton1(&b1, PTB, &PD);
 
 		}
+
+		else if(!(GPIO_ReadPinInput(PTB , 1) ) ){  //PTB1 recibio un pulso en bajo
+
+			antiBounceButtonPullUp(PTB, 1, &pb1); //Ya termino el antirrebote?
+			PRINTF("BOTON 2 PRESIONADO\n");
+			controlBoton2(&b2, PTB, &PD);
+		}
+
+
+		else if(!(GPIO_ReadPinInput(PTB , 2) ) ){ //PTB2 recibio un pulso en bajo
+
+			antiBounceButtonPullUp(PTB, 2, &pb2); //Ya termino el antirrebote?
+			PRINTF("BOTON 3 PRESIONADO\n");
+			controlBoton3(&b3, PTB, &PD);
+		}
+
+
 		else
 		{
 
 		}
 
 
+		if(flagPIT0){
+
+			//sistemaPrincipal(&b1, PTB, &PD);
+			flagPIT0 = 0;
+
+		}
+
+		else if(flagPIT1){
+			flagPIT1 = 0;
+		}
+
 	}
+
 
 	return 0 ;
 }
