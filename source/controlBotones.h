@@ -48,7 +48,6 @@ void initBoton(BotonControl* b)
 
 void controlBoton1(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 {
-	initPortRotabit(p, 3);
 
 	switch(b->curr_state)
 	{
@@ -59,6 +58,7 @@ void controlBoton1(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 		break;
 
 	case PLAY:
+		resetRotabit(p);
 		b->Next_state = PAUSE;
 		break;
 

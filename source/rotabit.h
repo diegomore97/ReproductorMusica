@@ -28,6 +28,13 @@ void initPortRotabit(Port_Rotabit* p, uint8_t maxBits); //Prototype function
 void rotabitRing(GPIO_Type *base, Port_Rotabit* p); //Prototype function
 void rotabitRingInvert(GPIO_Type *base, Port_Rotabit* p); //Prototype function
 uint8_t getBits(uint8_t maxBits); //Prototype function
+void resetRotabit(Port_Rotabit* p); //Prototype function
+
+void resetRotabit(Port_Rotabit* p)
+{
+	p->Next_state = START;
+	p->curr_state = START;
+}
 
 void initPortRotabit(Port_Rotabit* p, uint8_t maxBits)
 {
