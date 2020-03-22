@@ -54,17 +54,83 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_UART1_RX_PIN 1U     /*!<@brief PORTE pin index: 1 */
                                            /* @} */
 
+/*! @name PORTD0 (number 73), J2[6]/D10
+  @{ */
+#define BOARD_INITPINS_LED0_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
+#define BOARD_INITPINS_LED0_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
+#define BOARD_INITPINS_LED0_PORT PORTD /*!<@brief PORT device name: PORTD */
+#define BOARD_INITPINS_LED0_PIN 0U     /*!<@brief PORTD pin index: 0 */
+                                       /* @} */
+
+/*! @name PORTD1 (number 74), J2[12]/D3[3]/D13/LEDRGB_BLUE
+  @{ */
+#define BOARD_INITPINS_LED1_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
+#define BOARD_INITPINS_LED1_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
+#define BOARD_INITPINS_LED1_PORT PORTD /*!<@brief PORT device name: PORTD */
+#define BOARD_INITPINS_LED1_PIN 1U     /*!<@brief PORTD pin index: 1 */
+                                       /* @} */
+
+/*! @name PORTD2 (number 75), J2[8]/D11
+  @{ */
+#define BOARD_INITPINS_LED2_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
+#define BOARD_INITPINS_LED2_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
+#define BOARD_INITPINS_LED2_PORT PORTD /*!<@brief PORT device name: PORTD */
+#define BOARD_INITPINS_LED2_PIN 2U     /*!<@brief PORTD pin index: 2 */
+                                       /* @} */
+
+/*! @name PORTD3 (number 76), J2[10]/D12
+  @{ */
+#define BOARD_INITPINS_LED3_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
+#define BOARD_INITPINS_LED3_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
+#define BOARD_INITPINS_LED3_PORT PORTD /*!<@brief PORT device name: PORTD */
+#define BOARD_INITPINS_LED3_PIN 3U     /*!<@brief PORTD pin index: 3 */
+                                       /* @} */
+
+/*! @name PORTD5 (number 78), J2[4]/D9
+  @{ */
+#define BOARD_INITPINS_LED5_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
+#define BOARD_INITPINS_LED5_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
+#define BOARD_INITPINS_LED5_PORT PORTD /*!<@brief PORT device name: PORTD */
+#define BOARD_INITPINS_LED5_PIN 5U     /*!<@brief PORTD pin index: 5 */
+                                       /* @} */
+
+/*! @name PORTB0 (number 43), J10[2]/A0
+  @{ */
+#define BOARD_INITPINS_BOTON_1_FGPIO FGPIOB /*!<@brief FGPIO device name: FGPIOB */
+#define BOARD_INITPINS_BOTON_1_GPIO GPIOB /*!<@brief GPIO device name: GPIOB */
+#define BOARD_INITPINS_BOTON_1_PORT PORTB /*!<@brief PORT device name: PORTB */
+#define BOARD_INITPINS_BOTON_1_PIN 0U     /*!<@brief PORTB pin index: 0 */
+                                          /* @} */
+
+/*! @name PORTB1 (number 44), J10[4]/A1
+  @{ */
+#define BOARD_INITPINS_BOTON_2_FGPIO FGPIOB /*!<@brief FGPIO device name: FGPIOB */
+#define BOARD_INITPINS_BOTON_2_GPIO GPIOB /*!<@brief GPIO device name: GPIOB */
+#define BOARD_INITPINS_BOTON_2_PORT PORTB /*!<@brief PORT device name: PORTB */
+#define BOARD_INITPINS_BOTON_2_PIN 1U     /*!<@brief PORTB pin index: 1 */
+                                          /* @} */
+
+/*! @name PORTB2 (number 45), J10[6]/A2
+  @{ */
+#define BOARD_INITPINS_BOTON_3_FGPIO FGPIOB /*!<@brief FGPIO device name: FGPIOB */
+#define BOARD_INITPINS_BOTON_3_GPIO GPIOB /*!<@brief GPIO device name: GPIOB */
+#define BOARD_INITPINS_BOTON_3_PORT PORTB /*!<@brief PORT device name: PORTB */
+#define BOARD_INITPINS_BOTON_3_PIN 2U     /*!<@brief PORTB pin index: 2 */
+                                          /* @} */
+
 /*! @name PORTE20 (number 13), J10[1]
   @{ */
 #define BOARD_INITPINS_POT_PORT PORTE /*!<@brief PORT device name: PORTE */
 #define BOARD_INITPINS_POT_PIN 20U    /*!<@brief PORTE pin index: 20 */
                                       /* @} */
 
-/*! @name PORTB19 (number 54), D3[4]/LEDRGB_GREEN
+/*! @name PORTD7 (number 80), J2[19]
   @{ */
-#define BOARD_INITPINS_PWM_PORT PORTB /*!<@brief PORT device name: PORTB */
-#define BOARD_INITPINS_PWM_PIN 19U    /*!<@brief PORTB pin index: 19 */
-                                      /* @} */
+#define BOARD_INITPINS_LED4_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
+#define BOARD_INITPINS_LED4_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
+#define BOARD_INITPINS_LED4_PORT PORTD /*!<@brief PORT device name: PORTD */
+#define BOARD_INITPINS_LED4_PIN 7U     /*!<@brief PORTD pin index: 7 */
+                                       /* @} */
 
 /*!
  * @brief Configures pin routing and optionally pin electrical features.

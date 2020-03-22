@@ -32,6 +32,8 @@ typedef struct
 
 void initPinDebounce(PinDebounce* p, uint8_t minCountEnable, uint8_t minCountDis); //Prototype function
 unsigned char antiBounceButton(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p);  //Prototype function
+unsigned char antiBounceButtonPullUp(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p); //Prototype function
+unsigned char antiBounceButtonPullDown(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p); //Prototype function
 
 void initPinDebounce(PinDebounce* p, uint8_t minCountEnable, uint8_t minCountDis)
 {
@@ -43,7 +45,7 @@ void initPinDebounce(PinDebounce* p, uint8_t minCountEnable, uint8_t minCountDis
 	p->minCountDis = minCountDis;
 }
 
-unsigned char antiBounceButton(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p)
+unsigned char antiBounceButtonPullDown(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p) //make sure you have the resistor in pulldown
 {
 
 	switch(p->curr_state)
@@ -51,7 +53,7 @@ unsigned char antiBounceButton(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p
 
 	case DISABLE:
 
-		PRINTF("STATE DISABLE\n");
+		PRINTF("DEBOUNCE: STATE DISABLE\n");
 
 		if(GPIO_ReadPinInput(base , pinLeer) )
 		{
@@ -69,7 +71,7 @@ unsigned char antiBounceButton(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p
 
 	case COUNT_ENABLE:
 
-		PRINTF("STATE COUNT_ENABLE\n");
+		PRINTF("DEBOUNCE: STATE COUNT_ENABLE\n");
 
 		if(GPIO_ReadPinInput(base , pinLeer) )
 		{
@@ -100,7 +102,7 @@ unsigned char antiBounceButton(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p
 
 	case ENABLE:
 
-		PRINTF("STATE ENABLE\n");
+		PRINTF("DEBOUNCE: STATE ENABLE\n");
 
 		if(!(GPIO_ReadPinInput(base , pinLeer)) ) //INPUT = LOW
 		{
@@ -114,9 +116,134 @@ unsigned char antiBounceButton(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p
 
 	case COUNT_DIS:
 
-		PRINTF("STATE COUNT_DIS\n");
+		PRINTF("DEBOUNCE: STATE COUNT_DIS\n");
 
 		if(!(GPIO_ReadPinInput(base , pinLeer)) ) //INPUT = LOW
+		{
+
+			p->counter+=1;
+
+			if(p->counter >= p->minCountDis)
+			{
+				p->Next_state = DISABLE;
+				p->output = DISABLE;
+			}
+
+			else
+			{
+				p->output = ENABLE;
+				p->Next_state = COUNT_DIS;
+			}
+
+
+		}
+
+		else
+		{
+			p->counter = 0;
+			p->Next_state = ENABLE;
+			p->output = ENABLE;
+		}
+
+		break;
+
+
+	default:
+		break;
+
+
+	}
+
+	p->curr_state = p->Next_state;
+
+	if(p->output == ENABLE && p->curr_state == COUNT_DIS)
+	{
+		return 1;
+	}
+
+	else
+	{
+		return 0;
+	}
+
+
+}
+
+unsigned char antiBounceButtonPullUp(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p) //make sure you have the resistor in pullup either by sw or hw
+
+{
+
+	switch(p->curr_state)
+	{
+
+	case DISABLE:
+
+		PRINTF("STATE DISABLE\n");
+
+		if(!(GPIO_ReadPinInput(base , pinLeer) ) )
+		{
+			p->Next_state = COUNT_ENABLE;
+			p->counter = 0;
+			p->output=DISABLE;
+		}
+
+		else
+		{
+			p->Next_state = DISABLE;
+		}
+
+		break;
+
+	case COUNT_ENABLE:
+
+		PRINTF("STATE COUNT_ENABLE\n");
+
+		if(!(GPIO_ReadPinInput(base , pinLeer) ) )
+		{
+			p->counter+=1;
+
+			if(p->counter >= p->minCountEnable)
+			{
+				p->Next_state = ENABLE;
+				p->output = ENABLE;
+			}
+
+			else
+			{
+				p->Next_state = COUNT_ENABLE;
+				p->output = DISABLE;
+			}
+
+		}
+
+		else
+		{
+			p->Next_state = DISABLE;
+			p->counter = 0;
+			p->output = DISABLE;
+		}
+
+		break;
+
+	case ENABLE:
+
+		PRINTF("STATE ENABLE\n");
+
+		if(GPIO_ReadPinInput(base , pinLeer))  //INPUT = ON
+		{
+			p->counter = 0;
+			p->output = ENABLE;
+			p->Next_state = COUNT_DIS;
+
+		}
+
+		break;
+
+	case COUNT_DIS:
+
+		PRINTF("STATE COUNT_DIS\n");
+
+		if(GPIO_ReadPinInput(base , pinLeer))  //INPUT = ON
 		{
 
 			p->counter+=1;

@@ -102,7 +102,7 @@ void configPit(void)
 
 	PIT_Init(PIT, &My_PIT);
 
-	PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(1000, PIT_CLK_SRC_HZ_HP));
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
 
 	PIT_EnableInterrupts(PIT, kPIT_Chnl_0, kPIT_TimerInterruptEnable );
 
@@ -376,49 +376,59 @@ int main(void) {
 
 	char buf[TAM_CADENA +1];
 
-	unsigned char stateLed = 1; // 0 = LED OFF | 1 = LED ON
+	unsigned char stateRotaBit = 1; // 0 = LEDS OFF | 1 = LEDS ON
 
-	PinDebounce pb1; //Variable que guardara la configuracion para la maquina de estados de ese boton PTB1
-	Port_Rotabit PB;
+	PinDebounce pb0, pb1, pb2; //Variable que guardara la configuracion para la maquina de estados de ese boton PTB1
+	Port_Rotabit PD;
 
-	initPinDebounce(&pb1 , 1, 3); //Inicializar configuracion | Parametros 1 y 3 relacionados con la velocidad de pulsado
-	initPortRotabit(&PB, 4);
+	//BOTON PLAY | PAUSE | STOP
+	initPinDebounce(&pb0 , 1, 3); //Inicializar configuracion | Parametros 1 y 3 relacionados con la velocidad de pulsado
+
+	//BOTON NEXT | FWD
+	initPinDebounce(&pb1 , 1, 3);
+
+	//BOTON PREW | BWD
+	initPinDebounce(&pb2 , 1, 3);
+
+	initPortRotabit(&PD, 3); //Numero de leds | Asegurese que los pines de las puerto esten configurados como salidas en LOGICA 1
+
+	//Inicializando Puerto
+
+	PTD->PDDR = 0;
 
 	while(1) {
 
-		if(antiBounceButton(PTB, 1, &pb1)) //Anti-Bounce of the PIN PTB1 | Preguntar si el PTB1 recibio pulso en alto
-		{
+		if(flagPIT0){
 
-		}
-
-		else
-		{
-
-		}
-
-		if(flagPIT0) //SHOW ON UART EVERY 1 SECOND
-		{
+			if(stateRotaBit)
+			{
+				rotabitRing(PTD, &PD);
+			}
+			else
+			{
+				rotabitRingInvert(PTD,&PD);
+			}
 
 			flagPIT0 = 0;
 
-			sprintf(buf, "Valor ADC = %d | Valor PWM = %d\n", valueAdc, dutyCyclePwm);
-			UART_WriteBlockingString(UART1, buf); //UART1 TERMINAL
-			//PRINTF("%s\n", buf); //UART0 DEBUG TERMINAL
 
-		}
 
-		else if(flagPIT1) //READ ADC EVERY 200 MILISEGUNDS
-		{
-			flagPIT1 = 0;
+			if(antiBounceButtonPullUp(PTB, 0, &pb0)) //Anti-Bounce of the PIN PTB1 | Preguntar si el PTB1 recibio pulso en bajo
+			{
+				if(stateRotaBit)
+				{
+					stateRotaBit = 0; //TOGGLE
 
-			valueAdc = readAdc(adc16ChannelConfigStruct);
+				}
 
-			if(increment)
-				dutyCyclePwm = speedPwm(valueAdc, &countPwm, &increment);
-			else
-				dutyCyclePwm = speedPwmDecrement(valueAdc, &countPwm, &increment);
 
-			outputPwm(dutyCyclePwm,kTPM_LowTrue);
+				else
+				{
+
+					stateRotaBit = 1; //TOGGLE
+				}
+
+			}
 
 		}
 		else
