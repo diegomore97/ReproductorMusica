@@ -48,6 +48,7 @@ void initBoton(BotonControl* b)
 
 void controlBoton1(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 {
+	initPortRotabit(p, 3);
 
 	switch(b->curr_state)
 	{
@@ -102,6 +103,7 @@ void controlBoton3(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 		break;
 
 	case BWD:
+		initPortRotabit(p, 3);
 		rotabitRingInvert(base, p);
 		break;
 

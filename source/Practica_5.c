@@ -353,17 +353,17 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 	{
 
 	case PLAY:
-		PRINTF("Reproduciendo Cancion\n");
+		//PRINTF("Reproduciendo Cancion\n");
 		rotabitRing(base, p);
-		//rotabitRingInvert(base,p);
 		break;
 
 	case PAUSE:
-		PRINTF("Cancion Pausada\n");
+		//PRINTF("Cancion Pausada\n");
+		rotabitRingInvert(base, p);
 		break;
 
 	case STOP:
-		PRINTF("Sistema detenido\n");
+		//PRINTF("Sistema detenido\n");
 		initBoton(b);
 		base->PDDR = 0; //STOP
 		break;
@@ -432,7 +432,7 @@ int main(void) {
 		if(!(GPIO_ReadPinInput(PTB, 0) ) ){  //PTB0 recibio un pulso en bajo
 
 			antiBounceButtonPullUp(PTB, 0, &pb0); //Ya termino el antirrebote?
-			PRINTF("BOTON 1 PRESIONADO\n");
+			//PRINTF("BOTON 1 PRESIONADO\n");
 			controlBoton1(&b1, PTB, &PD);
 
 		}
@@ -440,7 +440,7 @@ int main(void) {
 		else if(!(GPIO_ReadPinInput(PTB , 1) ) ){  //PTB1 recibio un pulso en bajo
 
 			antiBounceButtonPullUp(PTB, 1, &pb1); //Ya termino el antirrebote?
-			PRINTF("BOTON 2 PRESIONADO\n");
+			//PRINTF("BOTON 2 PRESIONADO\n");
 			controlBoton2(&b2, PTB, &PD);
 		}
 
@@ -448,7 +448,7 @@ int main(void) {
 		else if(!(GPIO_ReadPinInput(PTB , 2) ) ){ //PTB2 recibio un pulso en bajo
 
 			antiBounceButtonPullUp(PTB, 2, &pb2); //Ya termino el antirrebote?
-			PRINTF("BOTON 3 PRESIONADO\n");
+			//PRINTF("BOTON 3 PRESIONADO\n");
 			controlBoton3(&b3, PTB, &PD);
 		}
 
