@@ -355,6 +355,7 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 	case PLAY:
 		PRINTF("Reproduciendo Cancion\n");
 		rotabitRing(base, p);
+		//rotabitRingInvert(base,p);
 		break;
 
 	case PAUSE:
@@ -363,6 +364,7 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 	case STOP:
 		PRINTF("Sistema detenido\n");
+		initBoton(b);
 		base->PDDR = 0; //STOP
 		break;
 
@@ -394,7 +396,7 @@ int main(void) {
 
 	configUart();  //UART1
 	configPit();   //Timer0
-	//configPit_2(); //Timer0 for ADC
+	configPit_2(); //Timer0 for ADC
 	configAdc(&adc16ChannelConfigStruct);   // Adc
 	configPwm(); //PWM
 

@@ -57,7 +57,7 @@ void antiBounceButtonPullDown(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p)
 
 		case DISABLE:
 
-			PRINTF("DEBOUNCE: STATE DISABLE\n");
+			//PRINTF("DEBOUNCE: STATE DISABLE\n");
 
 			if(GPIO_ReadPinInput(base , pinLeer) )
 			{
@@ -75,7 +75,7 @@ void antiBounceButtonPullDown(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p)
 
 		case COUNT_ENABLE:
 
-			PRINTF("DEBOUNCE: STATE COUNT_ENABLE\n");
+			//PRINTF("DEBOUNCE: STATE COUNT_ENABLE\n");
 
 			if(GPIO_ReadPinInput(base , pinLeer) )
 			{
@@ -106,7 +106,7 @@ void antiBounceButtonPullDown(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p)
 
 		case ENABLE:
 
-			PRINTF("DEBOUNCE: STATE ENABLE\n");
+			//PRINTF("DEBOUNCE: STATE ENABLE\n");
 
 			if(!(GPIO_ReadPinInput(base , pinLeer)) ) //INPUT = LOW
 			{
@@ -120,7 +120,7 @@ void antiBounceButtonPullDown(GPIO_Type *base, uint32_t pinLeer, PinDebounce* p)
 
 		case COUNT_DIS:
 
-			PRINTF("DEBOUNCE: STATE COUNT_DIS\n");
+			//PRINTF("DEBOUNCE: STATE COUNT_DIS\n");
 
 			if(!(GPIO_ReadPinInput(base , pinLeer)) ) //INPUT = LOW
 			{

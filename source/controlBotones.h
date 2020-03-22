@@ -102,6 +102,7 @@ void controlBoton3(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 		break;
 
 	case BWD:
+		rotabitRingInvert(base, p);
 		break;
 
 	default:

@@ -33,7 +33,7 @@ void initPortRotabit(Port_Rotabit* p, uint8_t maxBits)
 {
 	p->Next_state = START;
 	p->curr_state = START;
-	p->counter = 0;
+	p->counter = 1;
 	p->maxBits = getBits(maxBits); //MAXIMO 8 BITS
 }
 
@@ -52,31 +52,31 @@ uint8_t getBits(uint8_t maxBits)
 		break;
 
 	case 2:
-		bits = 3;
+		bits = 2;
 		break;
 
 	case 3:
-		bits = 7;
+		bits = 4;
 		break;
 
 	case 4:
-		bits = 15;
+		bits = 8;
 		break;
 
 	case 5:
-		bits = 31;
+		bits = 16;
 		break;
 
 	case 6:
-		bits = 63;
+		bits = 32;
 		break;
 
 	case 7:
-		bits = 127;
+		bits = 64;
 		break;
 
 	case 8:
-		bits = 255;
+		bits = 128;
 		break;
 
 	default:
@@ -95,7 +95,9 @@ void rotabitRing(GPIO_Type *base, Port_Rotabit* p)
 	case START:
 
 		//PRINTF("ROTABIT: STATE START\n");
-		p->counter = 1;
+		if((!p->counter) || (p->counter >= p->maxBits))
+			p->counter = 1;
+
 		p->Next_state = ROTATE;
 
 		break;
@@ -132,8 +134,8 @@ void rotabitRingInvert(GPIO_Type *base, Port_Rotabit* p)
 
 		//PRINTF("ROTABIT INVERTED: STATE START\n");
 
-		if (!p->counter) {
-			p->counter = (p->maxBits)+1;
+		if (p->counter == 1){
+			p->counter = p->maxBits;
 		}
 
 		p->Next_state = ROTATE;
@@ -144,14 +146,13 @@ void rotabitRingInvert(GPIO_Type *base, Port_Rotabit* p)
 
 		//PRINTF("ROTABIT INVERTED: STATE ROTATE\n");
 
-		if (!p->counter){
-			p->counter = (p->maxBits)+1;
+		p->counter = p->counter >> 1;
+		p->Next_state = ROTATE;
+
+		if (p->counter == 1){
 			p->Next_state = START;
 		}
-		else{
-			p->counter = p->counter >> 1;
-			p->Next_state = ROTATE;
-		}
+
 
 		break;
 
