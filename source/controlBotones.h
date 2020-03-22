@@ -10,9 +10,9 @@
 
 typedef enum
 {
-	PLAY = 1,
-	PAUSE,
-	STOP
+	STOP = 1,
+	PLAY,
+	PAUSE
 }BOTON1_STATES;
 
 typedef enum
@@ -52,16 +52,16 @@ void controlBoton1(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 	switch(b->curr_state)
 	{
 
+	case STOP:
+		base->PDDR = 0; //STOP
+		b->Next_state = PLAY;
+		break;
+
 	case PLAY:
 		b->Next_state = PAUSE;
 		break;
 
 	case PAUSE:
-		b->Next_state = PLAY;
-		break;
-
-	case STOP:
-		base->PDDR = 0; //STOP
 		b->Next_state = PLAY;
 		break;
 

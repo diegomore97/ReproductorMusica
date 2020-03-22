@@ -354,13 +354,15 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 	case PLAY:
 		PRINTF("Reproduciendo Cancion\n");
-		rotabitRing(base, p);
+		//rotabitRing(base, p);
 		break;
 
 	case PAUSE:
+		PRINTF("Cancion Pausada\n");
 		break;
 
 	case STOP:
+		PRINTF("Sistema detenido\n");
 		base->PDDR = 0; //STOP
 		break;
 
@@ -457,7 +459,7 @@ int main(void) {
 
 		if(flagPIT0){
 
-			//sistemaPrincipal(&b1, PTB, &PD);
+			sistemaPrincipal(&b1, PTB, &PD);
 			flagPIT0 = 0;
 
 		}
