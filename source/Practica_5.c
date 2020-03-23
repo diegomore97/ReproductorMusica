@@ -379,6 +379,10 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 void reproducirCancion(GPIO_Type *base)
 {
+	char bufer[20];
+	sprintf(bufer, "Esta sonando: %d\n", cancionActual);
+	PRINTF(bufer);
+
 	switch(cancionActual)
 	{
 
