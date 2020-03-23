@@ -78,22 +78,6 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_LED2_PIN 2U     /*!<@brief PORTD pin index: 2 */
                                        /* @} */
 
-/*! @name PORTD3 (number 76), J2[10]/D12
-  @{ */
-#define BOARD_INITPINS_LED3_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
-#define BOARD_INITPINS_LED3_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
-#define BOARD_INITPINS_LED3_PORT PORTD /*!<@brief PORT device name: PORTD */
-#define BOARD_INITPINS_LED3_PIN 3U     /*!<@brief PORTD pin index: 3 */
-                                       /* @} */
-
-/*! @name PORTD5 (number 78), J2[4]/D9
-  @{ */
-#define BOARD_INITPINS_LED5_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
-#define BOARD_INITPINS_LED5_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
-#define BOARD_INITPINS_LED5_PORT PORTD /*!<@brief PORT device name: PORTD */
-#define BOARD_INITPINS_LED5_PIN 5U     /*!<@brief PORTD pin index: 5 */
-                                       /* @} */
-
 /*! @name PORTB0 (number 43), J10[2]/A0
   @{ */
 #define BOARD_INITPINS_BOTON_1_FGPIO FGPIOB /*!<@brief FGPIO device name: FGPIOB */
@@ -124,13 +108,21 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_POT_PIN 20U    /*!<@brief PORTE pin index: 20 */
                                       /* @} */
 
-/*! @name PORTD7 (number 80), J2[19]
+/*! @name PORTC16 (number 71), J2[5]
   @{ */
-#define BOARD_INITPINS_LED4_FGPIO FGPIOD /*!<@brief FGPIO device name: FGPIOD */
-#define BOARD_INITPINS_LED4_GPIO GPIOD /*!<@brief GPIO device name: GPIOD */
-#define BOARD_INITPINS_LED4_PORT PORTD /*!<@brief PORT device name: PORTD */
-#define BOARD_INITPINS_LED4_PIN 7U     /*!<@brief PORTD pin index: 7 */
-                                       /* @} */
+#define BOARD_INITPINS_CancionB0_FGPIO FGPIOC /*!<@brief FGPIO device name: FGPIOC */
+#define BOARD_INITPINS_CancionB0_GPIO GPIOC /*!<@brief GPIO device name: GPIOC */
+#define BOARD_INITPINS_CancionB0_PORT PORTC /*!<@brief PORT device name: PORTC */
+#define BOARD_INITPINS_CancionB0_PIN 16U    /*!<@brief PORTC pin index: 16 */
+                                            /* @} */
+
+/*! @name PORTC17 (number 72), J2[7]
+  @{ */
+#define BOARD_INITPINS_CancionB1_FGPIO FGPIOC /*!<@brief FGPIO device name: FGPIOC */
+#define BOARD_INITPINS_CancionB1_GPIO GPIOC /*!<@brief GPIO device name: GPIOC */
+#define BOARD_INITPINS_CancionB1_PORT PORTC /*!<@brief PORT device name: PORTC */
+#define BOARD_INITPINS_CancionB1_PIN 17U    /*!<@brief PORTC pin index: 17 */
+                                            /* @} */
 
 /*!
  * @brief Configures pin routing and optionally pin electrical features.

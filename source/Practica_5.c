@@ -14,6 +14,7 @@
 #include "debounce.h"
 #include "rotabit.h"
 #include "controlBotones.h"
+//#include "delay.h" //Por si necesito un delay
 
 
 #define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
@@ -42,6 +43,7 @@ volatile uint8_t basePwm = 5;
 uint8_t counter = 0;
 uint32_t output = 0;
 
+
 void PIT_DriverIRQHandler(void);
 void configPit(void);
 void configPit_2(void);
@@ -53,6 +55,7 @@ uint16_t readAdc(adc16_channel_config_t adc16ChannelConfigStruct);
 uint8_t speedPwm(uint16_t valueAdc, uint8_t* countPwm, bool* increment);
 uint8_t speedPwmDecrement(uint16_t valueAdc,uint8_t* countPwm, bool* increment);
 void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p);
+void reproducirCancion(GPIO_Type *base);
 
 void PIT_DriverIRQHandler(void)
 {
@@ -123,7 +126,7 @@ void configPit_2(void)
 
 	PIT_Init(PIT, &My_PIT_2);
 
-	PIT_SetTimerPeriod(PIT, kPIT_Chnl_1,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_1,MSEC_TO_COUNT(50, PIT_CLK_SRC_HZ_HP));
 
 	PIT_EnableInterrupts(PIT, kPIT_Chnl_1, kPIT_TimerInterruptEnable );
 
@@ -359,7 +362,6 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 	case PAUSE:
 		//PRINTF("Cancion Pausada\n");
-		rotabitRingInvert(base, p);
 		break;
 
 	case STOP:
@@ -372,6 +374,34 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 		break;
 	}
 
+
+}
+
+void reproducirCancion(GPIO_Type *base)
+{
+	switch(cancionActual)
+	{
+
+	case 0:
+		base->PDDR = 0; //EL TRISTE - JOSE JOSE
+		break;
+
+	case 1:
+		base->PDDR = PIN16; //Encender pin16 del puerto
+		break;
+
+	case 2:
+		base->PDDR = PIN17; //Encender pin17 del puerto
+		break;
+
+	case 3:
+		base->PDDR = PIN16Y17; //Encender pin17 y 16 del puerto
+		break;
+
+
+	default:
+		break;
+	}
 
 }
 
@@ -426,6 +456,8 @@ int main(void) {
 	//Inicializando Puerto
 
 	PTD->PDDR = 0;
+	PTC->PDDR = 0;
+
 
 	while(1) {
 
@@ -468,6 +500,7 @@ int main(void) {
 
 		else if(flagPIT1){
 			flagPIT1 = 0;
+			reproducirCancion(PTC);
 		}
 
 	}

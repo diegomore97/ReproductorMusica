@@ -8,6 +8,14 @@
 #ifndef CONTROLBOTONES_H_
 #define CONTROLBOTONES_H_
 
+#define MAX_CANCIONES 3
+uint32_t PIN16 = 65536;
+uint32_t PIN17 = 131072;
+uint32_t PIN16Y17 = 196608;
+
+volatile int cancionActual = 0;
+
+
 typedef enum
 {
 	STOP = 1,
@@ -81,6 +89,13 @@ void controlBoton2(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 	{
 
 	case NEXT:
+		//PRINTF("SIGUIENTE CANCION\n");
+		cancionActual+=1;
+
+		if(cancionActual > MAX_CANCIONES)
+		{
+			cancionActual = 0;
+		}
 		break;
 
 	case FWD:
@@ -99,11 +114,18 @@ void controlBoton3(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 	{
 
 	case PREW:
+		//PRINTF("CANCION ANTERIOR\n");
+		cancionActual-=1;
+
+		if(cancionActual < 0)
+		{
+			cancionActual = 0;
+		}
 
 		break;
 
 	case BWD:
-		initPortRotabit(p, 3);
+		resetRotabit(p);
 		rotabitRingInvert(base, p);
 		break;
 

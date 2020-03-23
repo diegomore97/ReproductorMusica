@@ -17,18 +17,22 @@ pin_labels:
 - {pin_num: '1', pin_signal: PTE0/UART1_TX/RTC_CLKOUT/CMP0_OUT/I2C1_SDA, label: 'J2[18]/D14', identifier: UART1_TX}
 - {pin_num: '2', pin_signal: PTE1/SPI1_MOSI/UART1_RX/SPI1_MISO/I2C1_SCL, label: 'J2[20]/D15', identifier: UART1_RX}
 - {pin_num: '13', pin_signal: ADC0_DP0/ADC0_SE0/PTE20/TPM1_CH0/UART0_TX, label: 'J10[1]', identifier: POT}
+- {pin_num: '36', pin_signal: PTA16/SPI0_MOSI/SPI0_MISO, label: 'J2[9]'}
+- {pin_num: '37', pin_signal: PTA17/SPI0_MISO/SPI0_MOSI, label: 'J2[11]'}
 - {pin_num: '43', pin_signal: ADC0_SE8/TSI0_CH0/PTB0/LLWU_P5/I2C0_SCL/TPM1_CH0, label: 'J10[2]/A0', identifier: BOTON_1}
 - {pin_num: '44', pin_signal: ADC0_SE9/TSI0_CH6/PTB1/I2C0_SDA/TPM1_CH1, label: 'J10[4]/A1', identifier: BOTON_2}
 - {pin_num: '45', pin_signal: ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0, label: 'J10[6]/A2', identifier: BOTON_3}
 - {pin_num: '46', pin_signal: ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1, label: 'J10[8]/A3', identifier: POT}
 - {pin_num: '54', pin_signal: TSI0_CH12/PTB19/TPM2_CH1, label: 'D3[4]/LEDRGB_GREEN', identifier: LED_GREEN;PWM}
+- {pin_num: '71', pin_signal: PTC16, label: 'J2[5]', identifier: CancionB0}
+- {pin_num: '72', pin_signal: PTC17, label: 'J2[7]', identifier: CancionB1}
 - {pin_num: '73', pin_signal: PTD0/SPI0_PCS0/TPM0_CH0, label: 'J2[6]/D10', identifier: LED0}
-- {pin_num: '74', pin_signal: ADC0_SE5b/PTD1/SPI0_SCK/TPM0_CH1, label: 'J2[12]/D3[3]/D13/LEDRGB_BLUE', identifier: LED_BLUE;LED1}
+- {pin_num: '74', pin_signal: ADC0_SE5b/PTD1/SPI0_SCK/TPM0_CH1, label: 'J2[12]/D3[3]/D13/LEDRGB_BLUE', identifier: LED1}
 - {pin_num: '75', pin_signal: PTD2/SPI0_MOSI/UART2_RX/TPM0_CH2/SPI0_MISO, label: 'J2[8]/D11', identifier: LED2}
 - {pin_num: '76', pin_signal: PTD3/SPI0_MISO/UART2_TX/TPM0_CH3/SPI0_MOSI, label: 'J2[10]/D12', identifier: LED3}
 - {pin_num: '77', pin_signal: PTD4/LLWU_P14/SPI1_PCS0/UART2_RX/TPM0_CH4, label: 'J1[6]/D2', identifier: LED4}
 - {pin_num: '78', pin_signal: ADC0_SE6b/PTD5/SPI1_SCK/UART2_TX/TPM0_CH5, label: 'J2[4]/D9', identifier: LED5}
-- {pin_num: '80', pin_signal: PTD7/SPI1_MISO/UART0_TX/SPI1_MOSI, label: 'J2[19]', identifier: LED_4;LED4}
+- {pin_num: '80', pin_signal: PTD7/SPI1_MISO/UART0_TX/SPI1_MOSI, label: 'J2[19]', identifier: PWM}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -60,18 +64,15 @@ BOARD_InitPins:
   - {pin_num: '1', peripheral: UART1, signal: TX, pin_signal: PTE0/UART1_TX/RTC_CLKOUT/CMP0_OUT/I2C1_SDA}
   - {pin_num: '2', peripheral: UART1, signal: RX, pin_signal: PTE1/SPI1_MOSI/UART1_RX/SPI1_MISO/I2C1_SCL}
   - {pin_num: '73', peripheral: GPIOD, signal: 'GPIO, 0', pin_signal: PTD0/SPI0_PCS0/TPM0_CH0, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
-  - {pin_num: '74', peripheral: GPIOD, signal: 'GPIO, 1', pin_signal: ADC0_SE5b/PTD1/SPI0_SCK/TPM0_CH1, identifier: LED1, direction: OUTPUT, gpio_init_state: 'true',
-    pull_select: no_init}
+  - {pin_num: '74', peripheral: GPIOD, signal: 'GPIO, 1', pin_signal: ADC0_SE5b/PTD1/SPI0_SCK/TPM0_CH1, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
   - {pin_num: '75', peripheral: GPIOD, signal: 'GPIO, 2', pin_signal: PTD2/SPI0_MOSI/UART2_RX/TPM0_CH2/SPI0_MISO, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
-  - {pin_num: '76', peripheral: GPIOD, signal: 'GPIO, 3', pin_signal: PTD3/SPI0_MISO/UART2_TX/TPM0_CH3/SPI0_MOSI, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
-  - {pin_num: '78', peripheral: GPIOD, signal: 'GPIO, 5', pin_signal: ADC0_SE6b/PTD5/SPI1_SCK/UART2_TX/TPM0_CH5, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
   - {pin_num: '43', peripheral: GPIOB, signal: 'GPIO, 0', pin_signal: ADC0_SE8/TSI0_CH0/PTB0/LLWU_P5/I2C0_SCL/TPM1_CH0, direction: INPUT, gpio_interrupt: no_init,
     pull_enable: enable}
   - {pin_num: '44', peripheral: GPIOB, signal: 'GPIO, 1', pin_signal: ADC0_SE9/TSI0_CH6/PTB1/I2C0_SDA/TPM1_CH1, direction: INPUT, gpio_interrupt: no_init, pull_enable: enable}
   - {pin_num: '45', peripheral: GPIOB, signal: 'GPIO, 2', pin_signal: ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0, direction: INPUT, gpio_interrupt: no_init, pull_enable: enable}
   - {pin_num: '13', peripheral: ADC0, signal: 'DP, 0', pin_signal: ADC0_DP0/ADC0_SE0/PTE20/TPM1_CH0/UART0_TX, pull_select: no_init}
-  - {pin_num: '80', peripheral: GPIOD, signal: 'GPIO, 7', pin_signal: PTD7/SPI1_MISO/UART0_TX/SPI1_MOSI, identifier: LED4, direction: OUTPUT, gpio_init_state: 'true',
-    pull_select: no_init}
+  - {pin_num: '71', peripheral: GPIOC, signal: 'GPIO, 16', pin_signal: PTC16, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
+  - {pin_num: '72', peripheral: GPIOC, signal: 'GPIO, 17', pin_signal: PTC17, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -88,6 +89,8 @@ void BOARD_InitPins(void)
     CLOCK_EnableClock(kCLOCK_PortA);
     /* Port B Clock Gate Control: Clock enabled */
     CLOCK_EnableClock(kCLOCK_PortB);
+    /* Port C Clock Gate Control: Clock enabled */
+    CLOCK_EnableClock(kCLOCK_PortC);
     /* Port D Clock Gate Control: Clock enabled */
     CLOCK_EnableClock(kCLOCK_PortD);
     /* Port E Clock Gate Control: Clock enabled */
@@ -114,6 +117,20 @@ void BOARD_InitPins(void)
     /* Initialize GPIO functionality on pin PTB2 (pin 45)  */
     GPIO_PinInit(BOARD_INITPINS_BOTON_3_GPIO, BOARD_INITPINS_BOTON_3_PIN, &BOTON_3_config);
 
+    gpio_pin_config_t CancionB0_config = {
+        .pinDirection = kGPIO_DigitalOutput,
+        .outputLogic = 1U
+    };
+    /* Initialize GPIO functionality on pin PTC16 (pin 71)  */
+    GPIO_PinInit(BOARD_INITPINS_CancionB0_GPIO, BOARD_INITPINS_CancionB0_PIN, &CancionB0_config);
+
+    gpio_pin_config_t CancionB1_config = {
+        .pinDirection = kGPIO_DigitalOutput,
+        .outputLogic = 1U
+    };
+    /* Initialize GPIO functionality on pin PTC17 (pin 72)  */
+    GPIO_PinInit(BOARD_INITPINS_CancionB1_GPIO, BOARD_INITPINS_CancionB1_PIN, &CancionB1_config);
+
     gpio_pin_config_t LED0_config = {
         .pinDirection = kGPIO_DigitalOutput,
         .outputLogic = 1U
@@ -134,27 +151,6 @@ void BOARD_InitPins(void)
     };
     /* Initialize GPIO functionality on pin PTD2 (pin 75)  */
     GPIO_PinInit(BOARD_INITPINS_LED2_GPIO, BOARD_INITPINS_LED2_PIN, &LED2_config);
-
-    gpio_pin_config_t LED3_config = {
-        .pinDirection = kGPIO_DigitalOutput,
-        .outputLogic = 1U
-    };
-    /* Initialize GPIO functionality on pin PTD3 (pin 76)  */
-    GPIO_PinInit(BOARD_INITPINS_LED3_GPIO, BOARD_INITPINS_LED3_PIN, &LED3_config);
-
-    gpio_pin_config_t LED5_config = {
-        .pinDirection = kGPIO_DigitalOutput,
-        .outputLogic = 1U
-    };
-    /* Initialize GPIO functionality on pin PTD5 (pin 78)  */
-    GPIO_PinInit(BOARD_INITPINS_LED5_GPIO, BOARD_INITPINS_LED5_PIN, &LED5_config);
-
-    gpio_pin_config_t LED4_config = {
-        .pinDirection = kGPIO_DigitalOutput,
-        .outputLogic = 1U
-    };
-    /* Initialize GPIO functionality on pin PTD7 (pin 80)  */
-    GPIO_PinInit(BOARD_INITPINS_LED4_GPIO, BOARD_INITPINS_LED4_PIN, &LED4_config);
 
     /* PORTA1 (pin 27) is configured as UART0_RX */
     PORT_SetPinMux(BOARD_INITPINS_DEBUG_UART_RX_PORT, BOARD_INITPINS_DEBUG_UART_RX_PIN, kPORT_MuxAlt2);
@@ -195,6 +191,12 @@ void BOARD_InitPins(void)
     /* PORTB2 (pin 45) is configured as PTB2 */
     PORT_SetPinConfig(BOARD_INITPINS_BOTON_3_PORT, BOARD_INITPINS_BOTON_3_PIN, &BOTON_3);
 
+    /* PORTC16 (pin 71) is configured as PTC16 */
+    PORT_SetPinMux(BOARD_INITPINS_CancionB0_PORT, BOARD_INITPINS_CancionB0_PIN, kPORT_MuxAsGpio);
+
+    /* PORTC17 (pin 72) is configured as PTC17 */
+    PORT_SetPinMux(BOARD_INITPINS_CancionB1_PORT, BOARD_INITPINS_CancionB1_PIN, kPORT_MuxAsGpio);
+
     /* PORTD0 (pin 73) is configured as PTD0 */
     PORT_SetPinMux(BOARD_INITPINS_LED0_PORT, BOARD_INITPINS_LED0_PIN, kPORT_MuxAsGpio);
 
@@ -203,15 +205,6 @@ void BOARD_InitPins(void)
 
     /* PORTD2 (pin 75) is configured as PTD2 */
     PORT_SetPinMux(BOARD_INITPINS_LED2_PORT, BOARD_INITPINS_LED2_PIN, kPORT_MuxAsGpio);
-
-    /* PORTD3 (pin 76) is configured as PTD3 */
-    PORT_SetPinMux(BOARD_INITPINS_LED3_PORT, BOARD_INITPINS_LED3_PIN, kPORT_MuxAsGpio);
-
-    /* PORTD5 (pin 78) is configured as PTD5 */
-    PORT_SetPinMux(BOARD_INITPINS_LED5_PORT, BOARD_INITPINS_LED5_PIN, kPORT_MuxAsGpio);
-
-    /* PORTD7 (pin 80) is configured as PTD7 */
-    PORT_SetPinMux(BOARD_INITPINS_LED4_PORT, BOARD_INITPINS_LED4_PIN, kPORT_MuxAsGpio);
 
     /* PORTE0 (pin 1) is configured as UART1_TX */
     PORT_SetPinMux(BOARD_INITPINS_UART1_TX_PORT, BOARD_INITPINS_UART1_TX_PIN, kPORT_MuxAlt3);
