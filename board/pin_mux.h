@@ -94,14 +94,6 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_BOTON_2_PIN 1U     /*!<@brief PORTB pin index: 1 */
                                           /* @} */
 
-/*! @name PORTB2 (number 45), J10[6]/A2
-  @{ */
-#define BOARD_INITPINS_BOTON_3_FGPIO FGPIOB /*!<@brief FGPIO device name: FGPIOB */
-#define BOARD_INITPINS_BOTON_3_GPIO GPIOB /*!<@brief GPIO device name: GPIOB */
-#define BOARD_INITPINS_BOTON_3_PORT PORTB /*!<@brief PORT device name: PORTB */
-#define BOARD_INITPINS_BOTON_3_PIN 2U     /*!<@brief PORTB pin index: 2 */
-                                          /* @} */
-
 /*! @name PORTE20 (number 13), J10[1]
   @{ */
 #define BOARD_INITPINS_POT_PORT PORTE /*!<@brief PORT device name: PORTE */
@@ -123,6 +115,20 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_CancionB1_PORT PORTC /*!<@brief PORT device name: PORTC */
 #define BOARD_INITPINS_CancionB1_PIN 17U    /*!<@brief PORTC pin index: 17 */
                                             /* @} */
+
+/*! @name PORTB2 (number 45), J10[6]/A2
+  @{ */
+#define BOARD_INITPINS_BOTON_3_FGPIO FGPIOB /*!<@brief FGPIO device name: FGPIOB */
+#define BOARD_INITPINS_BOTON_3_GPIO GPIOB /*!<@brief GPIO device name: GPIOB */
+#define BOARD_INITPINS_BOTON_3_PORT PORTB /*!<@brief PORT device name: PORTB */
+#define BOARD_INITPINS_BOTON_3_PIN 2U     /*!<@brief PORTB pin index: 2 */
+                                          /* @} */
+
+/*! @name PORTB3 (number 46), J10[8]/A3
+  @{ */
+#define BOARD_INITPINS_LED_VOLUMEN_PORT PORTB /*!<@brief PORT device name: PORTB */
+#define BOARD_INITPINS_LED_VOLUMEN_PIN 3U     /*!<@brief PORTB pin index: 3 */
+                                              /* @} */
 
 /*!
  * @brief Configures pin routing and optionally pin electrical features.

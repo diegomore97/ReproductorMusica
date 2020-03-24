@@ -22,7 +22,7 @@ pin_labels:
 - {pin_num: '43', pin_signal: ADC0_SE8/TSI0_CH0/PTB0/LLWU_P5/I2C0_SCL/TPM1_CH0, label: 'J10[2]/A0', identifier: BOTON_1}
 - {pin_num: '44', pin_signal: ADC0_SE9/TSI0_CH6/PTB1/I2C0_SDA/TPM1_CH1, label: 'J10[4]/A1', identifier: BOTON_2}
 - {pin_num: '45', pin_signal: ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0, label: 'J10[6]/A2', identifier: BOTON_3}
-- {pin_num: '46', pin_signal: ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1, label: 'J10[8]/A3', identifier: POT}
+- {pin_num: '46', pin_signal: ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1, label: 'J10[8]/A3', identifier: LED_VOLUMEN}
 - {pin_num: '54', pin_signal: TSI0_CH12/PTB19/TPM2_CH1, label: 'D3[4]/LEDRGB_GREEN', identifier: LED_GREEN;PWM}
 - {pin_num: '71', pin_signal: PTC16, label: 'J2[5]', identifier: CancionB0}
 - {pin_num: '72', pin_signal: PTC17, label: 'J2[7]', identifier: CancionB1}
@@ -69,10 +69,11 @@ BOARD_InitPins:
   - {pin_num: '43', peripheral: GPIOB, signal: 'GPIO, 0', pin_signal: ADC0_SE8/TSI0_CH0/PTB0/LLWU_P5/I2C0_SCL/TPM1_CH0, direction: INPUT, gpio_interrupt: no_init,
     pull_enable: enable}
   - {pin_num: '44', peripheral: GPIOB, signal: 'GPIO, 1', pin_signal: ADC0_SE9/TSI0_CH6/PTB1/I2C0_SDA/TPM1_CH1, direction: INPUT, gpio_interrupt: no_init, pull_enable: enable}
-  - {pin_num: '45', peripheral: GPIOB, signal: 'GPIO, 2', pin_signal: ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0, direction: INPUT, gpio_interrupt: no_init, pull_enable: enable}
   - {pin_num: '13', peripheral: ADC0, signal: 'DP, 0', pin_signal: ADC0_DP0/ADC0_SE0/PTE20/TPM1_CH0/UART0_TX, pull_select: no_init}
   - {pin_num: '71', peripheral: GPIOC, signal: 'GPIO, 16', pin_signal: PTC16, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
   - {pin_num: '72', peripheral: GPIOC, signal: 'GPIO, 17', pin_signal: PTC17, direction: OUTPUT, gpio_init_state: 'true', pull_select: no_init}
+  - {pin_num: '45', peripheral: GPIOB, signal: 'GPIO, 2', pin_signal: ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0, direction: INPUT, gpio_interrupt: no_init, pull_enable: enable}
+  - {pin_num: '46', peripheral: TPM2, signal: 'CH, 1', pin_signal: ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1, direction: OUTPUT, pull_select: no_init}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -190,6 +191,9 @@ void BOARD_InitPins(void)
                                        kPORT_MuxAsGpio};
     /* PORTB2 (pin 45) is configured as PTB2 */
     PORT_SetPinConfig(BOARD_INITPINS_BOTON_3_PORT, BOARD_INITPINS_BOTON_3_PIN, &BOTON_3);
+
+    /* PORTB3 (pin 46) is configured as TPM2_CH1 */
+    PORT_SetPinMux(BOARD_INITPINS_LED_VOLUMEN_PORT, BOARD_INITPINS_LED_VOLUMEN_PIN, kPORT_MuxAlt3);
 
     /* PORTC16 (pin 71) is configured as PTC16 */
     PORT_SetPinMux(BOARD_INITPINS_CancionB0_PORT, BOARD_INITPINS_CancionB0_PIN, kPORT_MuxAsGpio);

@@ -32,7 +32,7 @@
                <pin_label pin_num="43" pin_signal="ADC0_SE8/TSI0_CH0/PTB0/LLWU_P5/I2C0_SCL/TPM1_CH0" label="J10[2]/A0" identifier="BOTON_1"/>
                <pin_label pin_num="44" pin_signal="ADC0_SE9/TSI0_CH6/PTB1/I2C0_SDA/TPM1_CH1" label="J10[4]/A1" identifier="BOTON_2"/>
                <pin_label pin_num="45" pin_signal="ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0" label="J10[6]/A2" identifier="BOTON_3"/>
-               <pin_label pin_num="46" pin_signal="ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1" label="J10[8]/A3" identifier="POT"/>
+               <pin_label pin_num="46" pin_signal="ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1" label="J10[8]/A3" identifier="LED_VOLUMEN"/>
                <pin_label pin_num="54" pin_signal="TSI0_CH12/PTB19/TPM2_CH1" label="D3[4]/LEDRGB_GREEN" identifier="LED_GREEN;PWM"/>
                <pin_label pin_num="71" pin_signal="PTC16" label="J2[5]" identifier="CancionB0"/>
                <pin_label pin_num="72" pin_signal="PTC17" label="J2[7]" identifier="CancionB1"/>
@@ -65,6 +65,11 @@
                      </feature>
                   </dependency>
                   <dependency resourceType="Peripheral" resourceId="ADC0" description="Peripheral ADC0 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="Peripheral" resourceId="TPM2" description="Peripheral TPM2 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
                      <feature name="initialized" evaluation="equal">
                         <data>true</data>
                      </feature>
@@ -125,13 +130,6 @@
                         <pin_feature name="pull_enable" value="enable"/>
                      </pin_features>
                   </pin>
-                  <pin peripheral="GPIOB" signal="GPIO, 2" pin_num="45" pin_signal="ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0">
-                     <pin_features>
-                        <pin_feature name="direction" value="INPUT"/>
-                        <pin_feature name="gpio_interrupt" value="no_init"/>
-                        <pin_feature name="pull_enable" value="enable"/>
-                     </pin_features>
-                  </pin>
                   <pin peripheral="ADC0" signal="DP, 0" pin_num="13" pin_signal="ADC0_DP0/ADC0_SE0/PTE20/TPM1_CH0/UART0_TX">
                      <pin_features>
                         <pin_feature name="pull_select" value="no_init"/>
@@ -148,6 +146,19 @@
                      <pin_features>
                         <pin_feature name="direction" value="OUTPUT"/>
                         <pin_feature name="gpio_init_state" value="true"/>
+                        <pin_feature name="pull_select" value="no_init"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIOB" signal="GPIO, 2" pin_num="45" pin_signal="ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0">
+                     <pin_features>
+                        <pin_feature name="direction" value="INPUT"/>
+                        <pin_feature name="gpio_interrupt" value="no_init"/>
+                        <pin_feature name="pull_enable" value="enable"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="TPM2" signal="CH, 1" pin_num="46" pin_signal="ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
                         <pin_feature name="pull_select" value="no_init"/>
                      </pin_features>
                   </pin>
