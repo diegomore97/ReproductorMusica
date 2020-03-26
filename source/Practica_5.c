@@ -15,10 +15,8 @@
 #include "rotabit.h"
 #include "controlBotones.h"
 #include "adctopwm.h"
+#include "tiempoBotones.h"
 //#include "delay.h" //Por si necesito un delay
-
-
-#define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
 
 #define DEMO_UART UART1
 #define DEMO_UART_CLKSRC BUS_CLK
@@ -48,6 +46,11 @@ void PIT_DriverIRQHandler(void)
 	else if(flagPIT0)
 	{
 		PIT_ClearStatusFlags(PIT,0, kPIT_TimerFlag);
+	}
+
+	else if(flagPIT2)
+	{
+		PIT_ClearStatusFlags(PIT,2, kPIT_TimerFlag);
 	}
 
 }
@@ -90,6 +93,24 @@ void configPit_2(void)
 	EnableIRQ(PIT_IRQn);
 
 	PIT_StartTimer(PIT, kPIT_Chnl_1);
+
+}
+
+void configPit_3(void)
+{
+	pit_config_t My_PIT_3;
+
+	PIT_GetDefaultConfig(&My_PIT_3);
+
+	PIT_Init(PIT, &My_PIT_3);
+
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_2,MSEC_TO_COUNT(10, PIT_CLK_SRC_HZ_HP));
+
+	PIT_EnableInterrupts(PIT, kPIT_Chnl_2, kPIT_TimerInterruptEnable );
+
+	PIT_StopTimer(PIT, kPIT_Chnl_2);
+
+	EnableIRQ(PIT_IRQn);
 
 }
 
@@ -192,6 +213,7 @@ int main(void) {
 	configUart();  //UART1
 	configPit();   //Timer0
 	configPit_2(); //Timer0 for ADC
+	//configPit_3(); //Tiempo Botones
 	configAdc(&adc16ChannelConfigStruct);   // Adc
 	configPwm(); //PWM
 
@@ -201,13 +223,13 @@ int main(void) {
 	Port_Rotabit PD;
 
 	//BOTON PLAY | PAUSE | STOP
-	initPinDebounce(&pb0 , 1, 2); //Inicializar configuracion | Parametros 1 y 3 relacionados con la velocidad de pulsado
+	initPinDebounce(&pb0 , 50, 50); //Inicializar configuracion | Parametros 1 y 3 relacionados con la velocidad de pulsado
 
 	//BOTON NEXT | FWD
-	initPinDebounce(&pb1 , 1, 2);
+	initPinDebounce(&pb1 , 50, 50);
 
 	//BOTON PREW | BWD
-	initPinDebounce(&pb2 , 1, 2);
+	initPinDebounce(&pb2 , 50, 50);
 
 	initPortRotabit(&PD, 3); //Numero de leds | Asegurese que los pines de las puerto esten configurados como salidas en LOGICA 1
 
@@ -230,25 +252,26 @@ int main(void) {
 
 	while(1) {
 
-		if(!(GPIO_ReadPinInput(PTB, 0) ) ){  //PTB0 recibio un pulso en bajo
+		antiBounceButtonPullUp(PTB, 0, &pb0); //Ya termino el antirrebote? BOTON PLAY
+		antiBounceButtonPullUp(PTB, 1, &pb1); //Ya termino el antirrebote? BOTON FWD
+		antiBounceButtonPullUp(PTB, 2, &pb2); //Ya termino el antirrebote? BOTON BWD
 
-			antiBounceButtonPullUp(PTB, 0, &pb0); //Ya termino el antirrebote?
+		if(pb0.debounced){
+
 			//PRINTF("BOTON 1 PRESIONADO\n");
 			controlBoton1(&b1, PTB, &PD);
 
 		}
 
-		else if(!(GPIO_ReadPinInput(PTB , 1) ) ){  //PTB1 recibio un pulso en bajo
+		if(pb1.debounced){
 
-			antiBounceButtonPullUp(PTB, 1, &pb1); //Ya termino el antirrebote?
 			//PRINTF("BOTON 2 PRESIONADO\n");
 			controlBoton2(&b2, PTB, &PD);
 		}
 
 
-		else if(!(GPIO_ReadPinInput(PTB , 2) ) ){ //PTB2 recibio un pulso en bajo
+		if(pb2.debounced){
 
-			antiBounceButtonPullUp(PTB, 2, &pb2); //Ya termino el antirrebote?
 			//PRINTF("BOTON 3 PRESIONADO\n");
 			controlBoton3(&b3, PTB, &PD);
 		}

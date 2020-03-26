@@ -66,12 +66,12 @@ void controlBoton1(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 		break;
 
 	case PLAY:
-		resetRotabit(p);
 		b->Next_state = PAUSE;
 		break;
 
 	case PAUSE:
 		b->Next_state = PLAY;
+		resetRotabit(p);
 		break;
 
 	default:
