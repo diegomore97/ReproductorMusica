@@ -11,24 +11,25 @@
 #include "fsl_uart.h"
 #include "fsl_adc16.h"
 #include "fsl_tpm.h"
-#include "debounce.h"
+#include "tiempoBotones.h"
 #include "rotabit.h"
 #include "controlBotones.h"
 #include "adctopwm.h"
-#include "tiempoBotones.h"
 //#include "delay.h" //Por si necesito un delay
 
 #define DEMO_UART UART1
 #define DEMO_UART_CLKSRC BUS_CLK
 #define DEMO_UART_CLK_FREQ CLOCK_GetFreq(BUS_CLK)
+#define PIT_SOURCE_CLOCK CLOCK_GetFreq(kCLOCK_BusClk)
+#define QUARTER_USEC_TO_COUNT(us_4, clockFreqInHz) (uint64_t)((uint64_t)us_4 * clockFreqInHz / 4000000U)
 
 uint32_t flagPIT0 = 0;
 uint32_t flagPIT1 = 0;
+char bufferMain[10]; //Variable para pruebas
 
 
 void PIT_DriverIRQHandler(void);
-void configPit(void);
-void configPit_2(void);
+void configPits(void);
 void configUart(void); //Por si se ocupa en un futuro
 void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p);
 void reproducirCancion(GPIO_Type *base);
@@ -41,6 +42,13 @@ void PIT_DriverIRQHandler(void)
 	if(flagPIT1)
 	{
 		PIT_ClearStatusFlags(PIT,1, kPIT_TimerFlag);
+
+		if(counterPush!=0xFFFFFFFF)
+		{
+			sprintf(bufferMain, "%d\n",counterPush);
+			PRINTF(bufferMain);
+			counterPush++;
+		}
 	}
 
 	else if(flagPIT0)
@@ -48,15 +56,11 @@ void PIT_DriverIRQHandler(void)
 		PIT_ClearStatusFlags(PIT,0, kPIT_TimerFlag);
 	}
 
-	else if(flagPIT2)
-	{
-		PIT_ClearStatusFlags(PIT,2, kPIT_TimerFlag);
-	}
 
 }
 
 
-void configPit(void)
+void configPits(void)
 {
 	pit_config_t My_PIT;
 
@@ -64,53 +68,21 @@ void configPit(void)
 
 	PIT_Init(PIT, &My_PIT);
 
+	/* Set timer period for channel 0 */
+	//PIT_SetTimerPeriod(PIT, kPIT_Chnl_0, QUARTER_USEC_TO_COUNT(90U, PIT_SOURCE_CLOCK));
 	PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_1, QUARTER_USEC_TO_COUNT(4000U, PIT_SOURCE_CLOCK));
 
-	PIT_EnableInterrupts(PIT, kPIT_Chnl_0, kPIT_TimerInterruptEnable );
+	/* Enable timer interrupts for channel 0 */
+	PIT_EnableInterrupts(PIT, kPIT_Chnl_0, kPIT_TimerInterruptEnable);
+	PIT_EnableInterrupts(PIT, kPIT_Chnl_1, kPIT_TimerInterruptEnable);
 
 	PIT_StopTimer(PIT, kPIT_Chnl_0);
-
-	EnableIRQ(PIT_IRQn);
-
-	PIT_StartTimer(PIT, kPIT_Chnl_0);
-
-}
-
-void configPit_2(void)
-{
-	pit_config_t My_PIT_2;
-
-	PIT_GetDefaultConfig(&My_PIT_2);
-
-	PIT_Init(PIT, &My_PIT_2);
-
-	PIT_SetTimerPeriod(PIT, kPIT_Chnl_1,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
-
-	PIT_EnableInterrupts(PIT, kPIT_Chnl_1, kPIT_TimerInterruptEnable );
-
 	PIT_StopTimer(PIT, kPIT_Chnl_1);
 
 	EnableIRQ(PIT_IRQn);
 
-	PIT_StartTimer(PIT, kPIT_Chnl_1);
-
-}
-
-void configPit_3(void)
-{
-	pit_config_t My_PIT_3;
-
-	PIT_GetDefaultConfig(&My_PIT_3);
-
-	PIT_Init(PIT, &My_PIT_3);
-
-	PIT_SetTimerPeriod(PIT, kPIT_Chnl_2,MSEC_TO_COUNT(10, PIT_CLK_SRC_HZ_HP));
-
-	PIT_EnableInterrupts(PIT, kPIT_Chnl_2, kPIT_TimerInterruptEnable );
-
-	PIT_StopTimer(PIT, kPIT_Chnl_2);
-
-	EnableIRQ(PIT_IRQn);
+	PIT_StartTimer(PIT, kPIT_Chnl_0);
 
 }
 
@@ -143,7 +115,12 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 	case PLAY:
 		//PRINTF("Reproduciendo Cancion\n");
-		rotabitRing(base, p);
+
+		if(!rotarInversa)
+			rotabitRing(base, p);
+		else
+			rotabitRingInvert(base, p);
+
 		break;
 
 	case PAUSE:
@@ -152,8 +129,6 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 	case STOP:
 		//PRINTF("Sistema detenido\n");
-		initBoton(b);
-		base->PDDR = 0; //STOP
 		break;
 
 	default:
@@ -165,9 +140,9 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 void reproducirCancion(GPIO_Type *base)
 {
-	char bufer[20];
-	sprintf(bufer, "Esta sonando: %d\n", cancionActual);
-	PRINTF(bufer);
+	//char bufer[20];
+	//sprintf(bufer, "Esta sonando: %d\n", cancionActual);
+	//PRINTF(bufer);
 
 	switch(cancionActual)
 	{
@@ -211,25 +186,12 @@ int main(void) {
 	//PRINTF("Hello World\n");  //Test UART0 Debug
 
 	configUart();  //UART1
-	configPit();   //Timer0
-	configPit_2(); //Timer0 for ADC
-	//configPit_3(); //Tiempo Botones
 	configAdc(&adc16ChannelConfigStruct);   // Adc
 	configPwm(); //PWM
 
 	UART_WriteBlockingString(UART1, prueba); //UART0 TERMINAL
 
-	PinDebounce pb0, pb1, pb2; //Variable que guardara la configuracion para la maquina de estados de ese boton PTB1
 	Port_Rotabit PD;
-
-	//BOTON PLAY | PAUSE | STOP
-	initPinDebounce(&pb0 , 50, 50); //Inicializar configuracion | Parametros 1 y 3 relacionados con la velocidad de pulsado
-
-	//BOTON NEXT | FWD
-	initPinDebounce(&pb1 , 50, 50);
-
-	//BOTON PREW | BWD
-	initPinDebounce(&pb2 , 50, 50);
 
 	initPortRotabit(&PD, 3); //Numero de leds | Asegurese que los pines de las puerto esten configurados como salidas en LOGICA 1
 
@@ -244,57 +206,47 @@ int main(void) {
 	initBoton(&b2);
 	initBoton(&b3);
 
+	//Variables para antirebote
+
+	BOTON_DEBOUNCE bd1, bd2, bd3;
+
+	b1.curr_state = DISABLED;
+	b2.curr_state = DISABLED;
+	b3.curr_state = DISABLED;
+
 	//Inicializando Puerto
 
 	PTD->PDDR = 0;
 	PTC->PDDR = 0;
 
+	TIPOS_PRESIONADO presionadoBotones[3];
+
+	presionadoBotones[0] = NO_ACTION;
+	presionadoBotones[1] = NO_ACTION;
+	presionadoBotones[2] = NO_ACTION;
+
+	configPits();   //Timer0
+
 
 	while(1) {
 
-		antiBounceButtonPullUp(PTB, 0, &pb0); //Ya termino el antirrebote? BOTON PLAY
-		antiBounceButtonPullUp(PTB, 1, &pb1); //Ya termino el antirrebote? BOTON FWD
-		antiBounceButtonPullUp(PTB, 2, &pb2); //Ya termino el antirrebote? BOTON BWD
+		presionadoBotones[0] = maquinaEstadosPush(PTB,0, PTB, 1, PTB, 2, &bd1);
+		presionadoBotones[1] = maquinaEstadosPush(PTB,0, PTB, 1, PTB, 2, &bd2);
+		presionadoBotones[2] = maquinaEstadosPush(PTB,0, PTB, 1, PTB, 2, &bd3);
 
-		if(pb0.debounced){
-
-			//PRINTF("BOTON 1 PRESIONADO\n");
-			controlBoton1(&b1, PTB, &PD);
-
-		}
-
-		if(pb1.debounced){
-
-			//PRINTF("BOTON 2 PRESIONADO\n");
-			controlBoton2(&b2, PTB, &PD);
-		}
-
-
-		if(pb2.debounced){
-
-			//PRINTF("BOTON 3 PRESIONADO\n");
-			controlBoton3(&b3, PTB, &PD);
-		}
-
-
-		else
-		{
-
-		}
+		controlBoton1(&b1, presionadoBotones , PTD, &PD);
+		controlBoton2(&b2, presionadoBotones , PTD, &PD);
+		controlBoton3(&b3, presionadoBotones , PTD, &PD);
 
 
 		if(flagPIT0){
 
-			sistemaPrincipal(&b1, PTD, &PD);
 			flagPIT0 = 0;
-
-		}
-
-		else if(flagPIT1){
-			flagPIT1 = 0;
-			reproducirCancion(PTC);
+			sistemaPrincipal(&b1, PTD, &PD);
 			controlVolumen(&s1, adc16ChannelConfigStruct);
 		}
+
+		reproducirCancion(PTC);
 
 	}
 

@@ -9,11 +9,14 @@
 #define CONTROLBOTONES_H_
 
 #define MAX_CANCIONES 3
+#define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
 uint32_t PIN16 = 65536;
 uint32_t PIN17 = 131072;
 uint32_t PIN16Y17 = 196608;
 
 volatile int cancionActual = 0;
+
+unsigned char rotarInversa = 0;
 
 
 typedef enum
@@ -44,9 +47,9 @@ typedef struct
 
 
 void controlBotones(BotonControl* b); //Prototype function
-void controlBoton1(BotonControl* b, GPIO_Type *base, Port_Rotabit* p); //Prototype Function
-void controlBoton2(BotonControl* b, GPIO_Type *base,Port_Rotabit* p); //Prototype Function
-void controlBoton3(BotonControl* b, GPIO_Type *base,Port_Rotabit* p); //Prototype Function
+void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p); //Prototype Function
+void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base,Port_Rotabit* p); //Prototype Function
+void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base,Port_Rotabit* p); //Prototype Function
 
 void initBoton(BotonControl* b)
 {
@@ -54,24 +57,70 @@ void initBoton(BotonControl* b)
 	b->curr_state = 1; //NO ES NUMERO MAGICO MIS ESTADOS SIEMPRE COMIENZAN EN 1
 }
 
-void controlBoton1(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
+void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p)
 {
 
 	switch(b->curr_state)
 	{
 
 	case STOP:
-		base->PDDR = 0; //STOP
-		b->Next_state = PLAY;
+
+		if(TP[0] == PPS_NORMAL)
+		{
+			b->Next_state = PLAY;
+		}
+		else if(TP[0] == PPS_PROLONGADO_RELEASE)
+		{
+			b->Next_state = STOP;
+		}
+
+		else
+		{
+			cancionActual = 0;
+			initBoton(b);
+			base->PDDR = 0; //APAGAR LEDS
+			resetRotabit(p);
+			b->Next_state = STOP;
+		}
+
 		break;
 
 	case PLAY:
-		b->Next_state = PAUSE;
+
+		if(TP[0] == PPS_NORMAL)
+		{
+			b->Next_state = PAUSE;
+		}
+		else if(TP[0] == PPS_PROLONGADO_RELEASE)
+		{
+			b->Next_state = STOP;
+		}
+
+		else
+		{
+			//PIT_StartTimer(PIT,kPIT_Chnl_0);
+			b->Next_state = PLAY;
+			//PRINTF("PLAY\n");
+		}
+
+
 		break;
 
 	case PAUSE:
-		b->Next_state = PLAY;
-		resetRotabit(p);
+		if(TP[0] == PPS_NORMAL)
+		{
+			b->Next_state = PLAY;
+		}
+		else if(TP[0] == PPS_PROLONGADO_RELEASE)
+		{
+			b->Next_state = STOP;
+
+		}
+		else
+		{
+			//PIT_StopTimer(PIT,kPIT_Chnl_0);
+			b->Next_state = PAUSE;
+		}
 		break;
 
 	default:
@@ -82,56 +131,115 @@ void controlBoton1(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 }
 
-void controlBoton2(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
+void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p)
 {
 
 	switch(b->curr_state)
 	{
 
 	case NEXT:
-		//PRINTF("SIGUIENTE CANCION\n");
-		cancionActual+=1;
 
-		if(cancionActual > MAX_CANCIONES)
+		if(TP[1] == NF_NORMAL)
 		{
-			cancionActual = 0;
+			PRINTF("SIGUIENTE CANCION\n");
+			cancionActual+=1;
+
+			if(cancionActual > MAX_CANCIONES)
+			{
+				cancionActual = 0;
+			}
+
+		}
+
+		else if(TP[1] == NF_PROLONGADO)
+		{
+			b->Next_state = FWD;
+		}
+
+		else
+		{
+			b->Next_state = NEXT;
 		}
 		break;
 
 	case FWD:
+		if(TP[1] == NF_PROLONGADO)
+		{
+			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
+			PRINTF("ADELANTANDO CANCION\n");
+			b->Next_state = FWD;
+		}
+
+		else
+		{
+			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
+			p->Next_state = NEXT;
+		}
 		break;
 
 
 	default:
 		break;
 	}
+
+	b->curr_state = b->Next_state;
 }
 
-void controlBoton3(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
+void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p)
 {
 
 	switch(b->curr_state)
 	{
 
 	case PREW:
-		//PRINTF("CANCION ANTERIOR\n");
-		cancionActual-=1;
 
-		if(cancionActual < 0)
+		if(TP[2] == PB_NORMAL)
 		{
-			cancionActual = 0;
+			PRINTF("CANCION ANTERIOR\n");
+			cancionActual-=1;
+
+			if(cancionActual < 0)
+			{
+				cancionActual = 0;
+			}
+
+		}
+
+		else if(TP[2] == PB_PROLONGADO)
+		{
+			b->Next_state = BWD;
+		}
+
+		else
+		{
+			b->Next_state = PREW;
 		}
 
 		break;
 
 	case BWD:
-		resetRotabit(p);
-		rotabitRingInvert(base, p);
+
+		if(TP[2] == PB_PROLONGADO)
+		{
+			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
+			PRINTF("ATRASANDO CANCION\n");
+			rotarInversa = 1;
+			b->Next_state = BWD;
+		}
+
+		else
+		{
+			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
+			rotarInversa = 0;
+			p->Next_state = PREW;
+		}
 		break;
 
 	default:
 		break;
 	}
+
+	b->curr_state = b->Next_state;
 }
 
 

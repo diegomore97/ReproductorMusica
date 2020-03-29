@@ -7,119 +7,340 @@
 
 #ifndef TIEMPOBOTONES_H_
 #define TIEMPOBOTONES_H_
-#define ACTIVE  1
-#define INACTIVE 0
-#define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
-#define MIN_TIMER 50
-#define MAX_TIMER 999
 
-uint32_t flagPIT2 = 0;
+#define thousandMiliseconds	7U //1 segundo
+#define fiftyMiliseconds	2U //50 milisegundos
 
 
 typedef enum
 {
-	NOT_PRESS,
-	PRESS,
-	SHORT_PRESS,
-	LONG_PRESS,
-	MAX_STATES
-}DEB_STATES;
+	DISABLED,
+	COUNT_EN0,
+	ENABLED0,
+	COUNT_DIS0,
+	COUNT_EN1,
+	ENABLED1,
+	COUNT_DIS1,
+	COUNT_EN2,
+	ENABLED2,
+	COUNT_DIS2
+} ESTADOS_PUSH;
 
-DEB_STATES curr_state = NOT_PRESS;
-DEB_STATES Next_State = NOT_PRESS;
 
-DEB_STATES DebButton(PinDebounce* p);
-
-
-DEB_STATES DebButton(PinDebounce* p)
+typedef enum
 {
+	PPS_NORMAL,
+	PPS_PROLONGADO_RELEASE,
+	NF_NORMAL,
+	NF_PROLONGADO,
+	NF_PROLONGADO_RELEASE,
+	PB_NORMAL,
+	PB_PROLONGADO,
+	PB_PROLONGADO_RELEASE,
+	NO_ACTION
 
-	static DEB_STATES ButtonState = NOT_PRESS;
-	uint32_t TimerCount = 0;
-	uint32_t ElapsedTime = 0;
-	unsigned char Debouncedbutton;
-	unsigned char button = 0;
+} TIPOS_PRESIONADO;
 
-	if(button != INACTIVE )
+typedef struct
+{
+	ESTADOS_PUSH estadoPushActual;
+}BOTON_DEBOUNCE;
+
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
+
+TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base1, uint32_t pinLeer1,GPIO_Type *base2, uint32_t pinLeer2,GPIO_Type *base3, uint32_t pinLeer3, BOTON_DEBOUNCE* bd);
+void maquinaEstadosReproductor(void);
+
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+
+volatile bool pitIsrFlag = false;
+uint32_t conteoMuestreo = 0U;
+uint32_t counterPush = 0U;
+uint16_t valorADC = 0;
+int8_t	 baseSuma = 1;
+uint8_t numCancion = 0U;
+ESTADOS_PUSH estadoPushSiguiente = DISABLED;
+
+TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base1, uint32_t pinLeer1,GPIO_Type *base2, uint32_t pinLeer2,GPIO_Type *base3, uint32_t pinLeer3, BOTON_DEBOUNCE* bd)
+{
+	static uint32_t diffCounterPush = 0;
+	TIPOS_PRESIONADO valorRetorno = NO_ACTION;
+
+	switch(bd->estadoPushActual)
 	{
-		button = ACTIVE;
-	}
-
-	switch(curr_state)
-	{
-	case NOT_PRESS:
-
-		/*Anti rebote*/
-		Debouncedbutton = p->debounced;
-
-
-		if(Debouncedbutton == INACTIVE)
+	case DISABLED:
+		if(!(GPIO_ReadPinInput(base1 , pinLeer1)))
 		{
-			/*Timer Stop*/
-			PIT_StopTimer(PIT, kPIT_Chnl_2);
-
-			//ShortPress = FALSE;
-			//LongPress = FALSE;
-
-			Next_State = NOT_PRESS;
+			//PRINTF("DISABLED PIN 1!\n");
+			estadoPushSiguiente=COUNT_EN0;
+			PIT_StartTimer(PIT, kPIT_Chnl_1);
 		}
-		else /* Button Active*/
+		else if(!(GPIO_ReadPinInput(base2, pinLeer2)))
 		{
-			flagPIT2 = 0;
-			PIT_StartTimer(PIT, kPIT_Chnl_2);
-			Next_State = PRESS;
+			//PRINTF("DISABLED PIN 2!\n");
+			estadoPushSiguiente=COUNT_EN1;
+			PIT_StartTimer(PIT, kPIT_Chnl_1);
 		}
-
-		ButtonState = NOT_PRESS;
-
+		else if(!(GPIO_ReadPinInput(base3, pinLeer3)))
+		{
+			//PRINTF("DISABLED PIN 3!\n");
+			estadoPushSiguiente=COUNT_EN2;
+			PIT_StartTimer(PIT, kPIT_Chnl_1);
+		}
+		else
+		{
+			estadoPushSiguiente=DISABLED;
+		}
 		break;
-
-	case PRESS:
-
-		if(button == ACTIVE)
+	case COUNT_EN0:
+		//PRINTF("COUNT_EN PIN 1!\n");
+		if(GPIO_ReadPinInput(base1 , pinLeer1))
 		{
-
+			estadoPushSiguiente=DISABLED;
+			PIT_StopTimer(PIT,kPIT_Chnl_1);
+			counterPush=0;
 		}
-		else /*button INACTIVE*/
+		else
 		{
-			TimerCount = PIT_GetCurrentTimerCount(PIT, kPIT_Chnl_2);
-
-			ElapsedTime = COUNT_TO_MSEC(TimerCount, PIT_CLK_SRC_HZ_HP);
-
-			if(ElapsedTime > MIN_TIMER && TimerCount <= MAX_TIMER)
+			if(counterPush>=fiftyMiliseconds)
 			{
-				Next_State = SHORT_PRESS;
-				ButtonState = SHORT_PRESS;
-				//ShortPress = 1;
+				estadoPushSiguiente=ENABLED0;
 			}
 			else
 			{
-				Next_State = NOT_PRESS;
-				ButtonState = NOT_PRESS;
-				PIT_StopTimer(PIT, kPIT_Chnl_2);
+				estadoPushSiguiente=COUNT_EN0;
 			}
-
 		}
-
 		break;
+	case ENABLED0:
+		//PRINTF("ENABLED PIN 1!\n");
+		if(GPIO_ReadPinInput(base1 , pinLeer1))
+		{
+			estadoPushSiguiente=COUNT_DIS0;
+			diffCounterPush=counterPush;
+			if(counterPush>thousandMiliseconds)
+			{
+				valorRetorno = PB_PROLONGADO;
+			}
+			else
+			{
 
-	case SHORT_PRESS:
+			}
+		}
+		else
+		{
+			estadoPushSiguiente=ENABLED0;
+			if(counterPush>thousandMiliseconds)
+			{
+				valorRetorno = PB_PROLONGADO;
+			}
+			else
+			{
+
+			}
+		}
 		break;
+	case COUNT_DIS0:
+		if(!(GPIO_ReadPinInput(base1 , pinLeer1)))
+		{
+			estadoPushSiguiente=ENABLED0;
+			if(diffCounterPush>thousandMiliseconds)
+			{
+				valorRetorno = PB_PROLONGADO;
+			}
+			else
+			{
 
-	case LONG_PRESS:
+			}
+		}
+		else
+		{
+			if((counterPush-diffCounterPush)>=fiftyMiliseconds)
+			{
+				estadoPushSiguiente=DISABLED;
+				PIT_StopTimer(PIT,kPIT_Chnl_1);
+				counterPush=0;
+				if(diffCounterPush<=thousandMiliseconds)
+				{
+					valorRetorno = PB_NORMAL;
+				}
+				else
+				{
+					valorRetorno = PB_PROLONGADO_RELEASE;
+				}
+			}
+			else
+			{
+				estadoPushSiguiente=COUNT_DIS0;
+				if(diffCounterPush>thousandMiliseconds)
+				{
+					valorRetorno = PB_PROLONGADO;
+				}
+				else
+				{
+
+				}
+			}
+		}
 		break;
+	case COUNT_EN1:
+		if(GPIO_ReadPinInput(base2 , pinLeer2))
+		{
+			estadoPushSiguiente=DISABLED;
+			PIT_StopTimer(PIT,kPIT_Chnl_1);
+			counterPush=0;
+		}
+		else
+		{
+			if(counterPush>=fiftyMiliseconds)
+			{
+				estadoPushSiguiente=ENABLED1;
+			}
+			else
+			{
+				estadoPushSiguiente=COUNT_EN1;
+			}
+		}
+		break;
+	case ENABLED1:
+		if(GPIO_ReadPinInput(base2 , pinLeer2))
+		{
+			estadoPushSiguiente=COUNT_DIS1;
+			diffCounterPush=counterPush;
+		}
+		else
+		{
+			estadoPushSiguiente=ENABLED1;
+		}
+		break;
+	case COUNT_DIS1:
+		if(!(GPIO_ReadPinInput(base2 , pinLeer2)))
+		{
+			estadoPushSiguiente=ENABLED1;
+		}
+		else
+		{
+			if((counterPush-diffCounterPush)>=fiftyMiliseconds)
+			{
+				estadoPushSiguiente=DISABLED;
+				PIT_StopTimer(PIT,kPIT_Chnl_1);
+				counterPush=0;
+				if(diffCounterPush<=thousandMiliseconds)
+				{
+					valorRetorno = PPS_NORMAL;
+				}
+				else
+				{
+					valorRetorno = PPS_PROLONGADO_RELEASE;
+				}
+			}
+			else
+			{
+				estadoPushSiguiente=COUNT_DIS1;
+			}
+		}
+		break;
+	case COUNT_EN2:
+		if(GPIO_ReadPinInput(base3 , pinLeer3))
+		{
+			estadoPushSiguiente=DISABLED;
+			PIT_StopTimer(PIT,kPIT_Chnl_1);
+			counterPush=0;
+		}
+		else
+		{
+			if(counterPush>=fiftyMiliseconds)
+			{
+				estadoPushSiguiente=ENABLED2;
+			}
+			else
+			{
+				estadoPushSiguiente=COUNT_EN2;
+			}
+		}
+		break;
+	case ENABLED2:
+		if(GPIO_ReadPinInput(base3 , pinLeer3))
+		{
+			estadoPushSiguiente=COUNT_DIS2;
+			diffCounterPush=counterPush;
+			if(counterPush>thousandMiliseconds)
+			{
+				valorRetorno = NF_PROLONGADO;
+			}
+			else
+			{
 
-	case MAX_STATES:
+			}
+		}
+		else
+		{
+			estadoPushSiguiente=ENABLED2;
+			if(counterPush>thousandMiliseconds)
+			{
+				valorRetorno = NF_PROLONGADO;
+			}
+			else
+			{
+
+			}
+		}
+		break;
+	case COUNT_DIS2:
+		if(!(GPIO_ReadPinInput(base3 , pinLeer3)))
+		{
+			estadoPushSiguiente=ENABLED2;
+			if(diffCounterPush>thousandMiliseconds)
+			{
+				valorRetorno = NF_PROLONGADO;
+			}
+			else
+			{
+
+			}
+		}
+		else
+		{
+			if((counterPush-diffCounterPush)>=fiftyMiliseconds)
+			{
+				estadoPushSiguiente=DISABLED;
+				PIT_StopTimer(PIT,kPIT_Chnl_1);
+				counterPush=0;
+				if(diffCounterPush<=thousandMiliseconds)
+				{
+					valorRetorno = NF_NORMAL;
+				}
+				else
+				{
+					valorRetorno = NF_PROLONGADO_RELEASE;
+				}
+			}
+			else
+			{
+				estadoPushSiguiente=COUNT_DIS2;
+				if(diffCounterPush>thousandMiliseconds)
+				{
+					valorRetorno = NF_PROLONGADO;
+				}
+				else
+				{
+
+				}
+			}
+		}
+		break;
 	default:
-
 		break;
 	}
 
-	curr_state = Next_State;
+	bd->estadoPushActual=estadoPushSiguiente;
 
-	return ButtonState;
+	return valorRetorno;
+
 }
-
-
 
 #endif /* TIEMPOBOTONES_H_ */

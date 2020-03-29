@@ -34,6 +34,7 @@ void resetRotabit(Port_Rotabit* p)
 {
 	p->Next_state = START;
 	p->curr_state = START;
+	p->counter = 1;
 }
 
 void initPortRotabit(Port_Rotabit* p, uint8_t maxBits)
