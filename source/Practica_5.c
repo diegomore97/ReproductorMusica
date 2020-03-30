@@ -49,6 +49,7 @@ void PIT_DriverIRQHandler(void)
 			PRINTF(bufferMain);
 			counterPush++;
 		}
+
 	}
 
 	else if(flagPIT0)
@@ -209,6 +210,10 @@ int main(void) {
 	//Variables para antirebote
 
 	BOTON_DEBOUNCE bd1, bd2, bd3;
+
+	inicializarBotonDebounce(&bd1);
+	inicializarBotonDebounce(&bd2);
+	inicializarBotonDebounce(&bd3);
 
 	b1.curr_state = DISABLED;
 	b2.curr_state = DISABLED;

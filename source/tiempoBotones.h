@@ -10,6 +10,7 @@
 
 #define thousandMiliseconds	7U //1 segundo
 #define fiftyMiliseconds	2U //50 milisegundos
+uint32_t counterPush = 0U;
 
 
 typedef enum
@@ -32,6 +33,7 @@ typedef enum
 typedef struct
 {
 	ESTADOS_PUSH estadoPushActual;
+	uint32_t diffCounterPush;
 }BOTON_DEBOUNCE;
 
 /*******************************************************************************
@@ -40,19 +42,22 @@ typedef struct
 
 TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEBOUNCE* bd);
 void maquinaEstadosReproductor(void);
+void inicializarBotonDebounce(BOTON_DEBOUNCE* bd);
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-
-volatile bool pitIsrFlag = false;
-uint32_t conteoMuestreo = 0U;
-uint32_t counterPush = 0U;
 ESTADOS_PUSH estadoPushSiguiente = DISABLED;
+
+void inicializarBotonDebounce(BOTON_DEBOUNCE* bd)
+{
+	bd->diffCounterPush = 0;
+	bd->estadoPushActual = DISABLED;
+}
 
 TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEBOUNCE* bd)
 {
-	static uint32_t diffCounterPush = 0;
+
 	TIPOS_PRESIONADO valorRetorno = NO_ACTION;
 
 	switch(bd->estadoPushActual)
@@ -72,7 +77,6 @@ TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEB
 		break;
 
 	case COUNT_EN:
-		//PRINTF("COUNT_EN PIN 1!\n");
 		if(GPIO_ReadPinInput(base , pinLeer))
 		{
 			estadoPushSiguiente=DISABLED;
@@ -81,7 +85,7 @@ TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEB
 		}
 		else
 		{
-			if(counterPush>=fiftyMiliseconds)
+			if(counterPush>= fiftyMiliseconds)
 			{
 				estadoPushSiguiente=ENABLED;
 			}
@@ -91,12 +95,13 @@ TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEB
 			}
 		}
 		break;
+
 	case ENABLED:
-		//PRINTF("ENABLED PIN 1!\n");
 		if(GPIO_ReadPinInput(base , pinLeer))
 		{
 			estadoPushSiguiente=COUNT_DIS;
-			diffCounterPush=counterPush;
+			bd->diffCounterPush=counterPush;
+
 			if(counterPush>thousandMiliseconds)
 			{
 				valorRetorno = PROLONGADO;
@@ -109,6 +114,7 @@ TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEB
 		else
 		{
 			estadoPushSiguiente=ENABLED;
+
 			if(counterPush>thousandMiliseconds)
 			{
 				valorRetorno = PROLONGADO;
@@ -119,11 +125,13 @@ TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEB
 			}
 		}
 		break;
+
 	case COUNT_DIS:
 		if(!(GPIO_ReadPinInput(base , pinLeer)))
 		{
 			estadoPushSiguiente=ENABLED;
-			if(diffCounterPush>thousandMiliseconds)
+
+			if(bd->diffCounterPush>thousandMiliseconds)
 			{
 				valorRetorno = PROLONGADO;
 			}
@@ -134,12 +142,12 @@ TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEB
 		}
 		else
 		{
-			if((counterPush-diffCounterPush)>=fiftyMiliseconds)
+			if((counterPush - bd->diffCounterPush) >= fiftyMiliseconds)
 			{
 				estadoPushSiguiente=DISABLED;
 				PIT_StopTimer(PIT,kPIT_Chnl_1);
 				counterPush=0;
-				if(diffCounterPush<=thousandMiliseconds)
+				if(bd->diffCounterPush <= thousandMiliseconds)
 				{
 					valorRetorno = NORMAL;
 				}
@@ -151,7 +159,8 @@ TIPOS_PRESIONADO maquinaEstadosPush(GPIO_Type *base, uint32_t pinLeer, BOTON_DEB
 			else
 			{
 				estadoPushSiguiente=COUNT_DIS;
-				if(diffCounterPush>thousandMiliseconds)
+
+				if(bd->diffCounterPush>thousandMiliseconds)
 				{
 					valorRetorno = PROLONGADO;
 				}

@@ -16,6 +16,9 @@ uint32_t PIN16Y17 = 196608;
 
 volatile int cancionActual = 0;
 uint8_t atrasar = 0;
+uint8_t adelantar = 0;
+
+void cambiarPeriodo(void);
 
 
 typedef enum
@@ -54,6 +57,19 @@ void initBoton(BotonControl* b)
 {
 	b->Next_state = 1; //NO ES NUMERO MAGICO MIS ESTADOS SIEMPRE COMIENZAN EN 1
 	b->curr_state = 1; //NO ES NUMERO MAGICO MIS ESTADOS SIEMPRE COMIENZAN EN 1
+}
+
+void cambiarPeriodo(void)
+{
+	if(adelantar || atrasar){
+		PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
+		PRINTF("PERIODO A 100 MS\n");
+	}
+	else{
+		PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
+		PRINTF("PERIODO A 500 MS\n");
+	}
+
 }
 
 void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p)
@@ -116,7 +132,6 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 		}
 		else
 		{
-			//PIT_StopTimer(PIT,kPIT_Chnl_0);
 			b->Next_state = PAUSE;
 		}
 		break;
@@ -151,7 +166,6 @@ void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 
 		else if(TP[1] == PROLONGADO)
 		{
-			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
 			b->Next_state = FWD;
 		}
 
@@ -164,13 +178,15 @@ void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 	case FWD:
 		if(TP[1] == PROLONGADO)
 		{
-			//PRINTF("ADELANTANDO CANCION\n");
+			adelantar = 1;
+			cambiarPeriodo();
 			b->Next_state = FWD;
 		}
 
-		else
+		else if(TP[1] == NORMAL)
 		{
-			//PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
+			adelantar = 0;
+			cambiarPeriodo();
 			b->Next_state = NEXT;
 		}
 
@@ -206,8 +222,6 @@ void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 
 		else if(TP[2] == PROLONGADO)
 		{
-			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(1000, PIT_CLK_SRC_HZ_HP));
-			atrasar = 1;
 			b->Next_state = BWD;
 		}
 
@@ -222,14 +236,15 @@ void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 
 		if(TP[2] == PROLONGADO)
 		{
-			//PRINTF("ATRASANDO CANCION\n");
+			atrasar = 1;
+			cambiarPeriodo();
 			b->Next_state = BWD;
 		}
 
-		else
+		else if(TP[2] == NORMAL)
 		{
-			//atrasar = 0;
-			//PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
+			atrasar = 0;
+			cambiarPeriodo();
 			b->Next_state = PREW;
 		}
 
