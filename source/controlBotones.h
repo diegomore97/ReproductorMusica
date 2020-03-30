@@ -15,8 +15,7 @@ uint32_t PIN17 = 131072;
 uint32_t PIN16Y17 = 196608;
 
 volatile int cancionActual = 0;
-
-unsigned char rotarInversa = 0;
+uint8_t atrasar = 0;
 
 
 typedef enum
@@ -65,11 +64,11 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 
 	case STOP:
 
-		if(TP[0] == PPS_NORMAL)
+		if(TP[0] == NORMAL)
 		{
 			b->Next_state = PLAY;
 		}
-		else if(TP[0] == PPS_PROLONGADO_RELEASE)
+		else if(TP[0] == PROLONGADO_RELEASE)
 		{
 			b->Next_state = STOP;
 		}
@@ -87,18 +86,17 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 
 	case PLAY:
 
-		if(TP[0] == PPS_NORMAL)
+		if(TP[0] == NORMAL)
 		{
 			b->Next_state = PAUSE;
 		}
-		else if(TP[0] == PPS_PROLONGADO_RELEASE)
+		else if(TP[0] == PROLONGADO_RELEASE)
 		{
 			b->Next_state = STOP;
 		}
 
 		else
 		{
-			//PIT_StartTimer(PIT,kPIT_Chnl_0);
 			b->Next_state = PLAY;
 			//PRINTF("PLAY\n");
 		}
@@ -107,11 +105,11 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 		break;
 
 	case PAUSE:
-		if(TP[0] == PPS_NORMAL)
+		if(TP[0] == NORMAL)
 		{
 			b->Next_state = PLAY;
 		}
-		else if(TP[0] == PPS_PROLONGADO_RELEASE)
+		else if(TP[0] == PROLONGADO_RELEASE)
 		{
 			b->Next_state = STOP;
 
@@ -139,7 +137,7 @@ void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 
 	case NEXT:
 
-		if(TP[1] == NF_NORMAL)
+		if(TP[1] == NORMAL)
 		{
 			PRINTF("SIGUIENTE CANCION\n");
 			cancionActual+=1;
@@ -151,8 +149,9 @@ void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 
 		}
 
-		else if(TP[1] == NF_PROLONGADO)
+		else if(TP[1] == PROLONGADO)
 		{
+			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
 			b->Next_state = FWD;
 		}
 
@@ -163,18 +162,18 @@ void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 		break;
 
 	case FWD:
-		if(TP[1] == NF_PROLONGADO)
+		if(TP[1] == PROLONGADO)
 		{
-			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
-			PRINTF("ADELANTANDO CANCION\n");
+			//PRINTF("ADELANTANDO CANCION\n");
 			b->Next_state = FWD;
 		}
 
 		else
 		{
-			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
-			p->Next_state = NEXT;
+			//PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
+			b->Next_state = NEXT;
 		}
+
 		break;
 
 
@@ -193,7 +192,7 @@ void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 
 	case PREW:
 
-		if(TP[2] == PB_NORMAL)
+		if(TP[2] == NORMAL)
 		{
 			PRINTF("CANCION ANTERIOR\n");
 			cancionActual-=1;
@@ -205,8 +204,10 @@ void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 
 		}
 
-		else if(TP[2] == PB_PROLONGADO)
+		else if(TP[2] == PROLONGADO)
 		{
+			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(1000, PIT_CLK_SRC_HZ_HP));
+			atrasar = 1;
 			b->Next_state = BWD;
 		}
 
@@ -219,20 +220,19 @@ void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 
 	case BWD:
 
-		if(TP[2] == PB_PROLONGADO)
+		if(TP[2] == PROLONGADO)
 		{
-			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
-			PRINTF("ATRASANDO CANCION\n");
-			rotarInversa = 1;
+			//PRINTF("ATRASANDO CANCION\n");
 			b->Next_state = BWD;
 		}
 
 		else
 		{
-			PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
-			rotarInversa = 0;
-			p->Next_state = PREW;
+			//atrasar = 0;
+			//PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
+			b->Next_state = PREW;
 		}
+
 		break;
 
 	default:

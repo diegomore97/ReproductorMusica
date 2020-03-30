@@ -116,7 +116,7 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 	case PLAY:
 		//PRINTF("Reproduciendo Cancion\n");
 
-		if(!rotarInversa)
+		if(!atrasar)
 			rotabitRing(base, p);
 		else
 			rotabitRingInvert(base, p);
@@ -230,9 +230,9 @@ int main(void) {
 
 	while(1) {
 
-		presionadoBotones[0] = maquinaEstadosPush(PTB,0, PTB, 1, PTB, 2, &bd1);
-		presionadoBotones[1] = maquinaEstadosPush(PTB,0, PTB, 1, PTB, 2, &bd2);
-		presionadoBotones[2] = maquinaEstadosPush(PTB,0, PTB, 1, PTB, 2, &bd3);
+		presionadoBotones[0] = maquinaEstadosPush(PTB, 0, &bd1);
+		presionadoBotones[1] = maquinaEstadosPush(PTB, 1, &bd2);
+		presionadoBotones[2] = maquinaEstadosPush(PTB, 2, &bd3);
 
 		controlBoton1(&b1, presionadoBotones , PTD, &PD);
 		controlBoton2(&b2, presionadoBotones , PTD, &PD);
