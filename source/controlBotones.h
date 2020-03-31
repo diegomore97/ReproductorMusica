@@ -63,11 +63,11 @@ void cambiarPeriodo(void)
 {
 	if(adelantar || atrasar){
 		PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(100, PIT_CLK_SRC_HZ_HP));
-		PRINTF("PERIODO A 100 MS\n");
+		//PRINTF("PERIODO A 100 MS\n");
 	}
 	else{
 		PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
-		PRINTF("PERIODO A 500 MS\n");
+		//PRINTF("PERIODO A 500 MS\n");
 	}
 
 }
@@ -80,8 +80,11 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 
 	case STOP:
 
+		PIT_StopTimer(PIT,kPIT_Chnl_0);
+
 		if(TP[0] == NORMAL)
 		{
+			PIT_StartTimer(PIT,kPIT_Chnl_0);
 			b->Next_state = PLAY;
 		}
 		else if(TP[0] == PROLONGADO_RELEASE)
@@ -104,6 +107,7 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 
 		if(TP[0] == NORMAL)
 		{
+
 			b->Next_state = PAUSE;
 		}
 		else if(TP[0] == PROLONGADO_RELEASE)
@@ -121,15 +125,21 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 		break;
 
 	case PAUSE:
+
+		PIT_StopTimer(PIT,kPIT_Chnl_0);
+
 		if(TP[0] == NORMAL)
 		{
+			PIT_StartTimer(PIT,kPIT_Chnl_0);
 			b->Next_state = PLAY;
 		}
+
 		else if(TP[0] == PROLONGADO_RELEASE)
 		{
 			b->Next_state = STOP;
 
 		}
+
 		else
 		{
 			b->Next_state = PAUSE;
@@ -183,7 +193,7 @@ void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 			b->Next_state = FWD;
 		}
 
-		else if(TP[1] == NORMAL)
+		else
 		{
 			adelantar = 0;
 			cambiarPeriodo();
@@ -241,7 +251,7 @@ void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 			b->Next_state = BWD;
 		}
 
-		else if(TP[2] == NORMAL)
+		else
 		{
 			atrasar = 0;
 			cambiarPeriodo();

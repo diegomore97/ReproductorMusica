@@ -72,7 +72,7 @@ void configPits(void)
 	/* Set timer period for channel 0 */
 	//PIT_SetTimerPeriod(PIT, kPIT_Chnl_0, QUARTER_USEC_TO_COUNT(90U, PIT_SOURCE_CLOCK));
 	PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,MSEC_TO_COUNT(500, PIT_CLK_SRC_HZ_HP));
-	PIT_SetTimerPeriod(PIT, kPIT_Chnl_1, QUARTER_USEC_TO_COUNT(4000U, PIT_SOURCE_CLOCK));
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_1, USEC_TO_COUNT(50000U, PIT_SOURCE_CLOCK));
 
 	/* Enable timer interrupts for channel 0 */
 	PIT_EnableInterrupts(PIT, kPIT_Chnl_0, kPIT_TimerInterruptEnable);
@@ -83,7 +83,6 @@ void configPits(void)
 
 	EnableIRQ(PIT_IRQn);
 
-	PIT_StartTimer(PIT, kPIT_Chnl_0);
 
 }
 
@@ -231,6 +230,8 @@ int main(void) {
 	presionadoBotones[2] = NO_ACTION;
 
 	configPits();   //Timer0
+
+	controlVolumen(&s1, adc16ChannelConfigStruct);
 
 
 	while(1) {

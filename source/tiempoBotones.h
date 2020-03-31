@@ -8,8 +8,8 @@
 #ifndef TIEMPOBOTONES_H_
 #define TIEMPOBOTONES_H_
 
-#define thousandMiliseconds	7U //1 segundo
-#define fiftyMiliseconds	2U //50 milisegundos
+#define thousandMiliseconds	5U //1 segundo
+#define fiftyMiliseconds	1U //50 milisegundos
 uint32_t counterPush = 0U;
 
 
