@@ -77,8 +77,6 @@ void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP)
 
 	case STOP:
 
-		PIT_StopTimer(PIT,kPIT_Chnl_0);
-
 		if(TP[0] == NORMAL)
 		{
 			PIT_StartTimer(PIT,kPIT_Chnl_0);

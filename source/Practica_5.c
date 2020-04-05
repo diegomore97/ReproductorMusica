@@ -146,7 +146,9 @@ void sistemaPrincipal(BotonControl* b, Port_Rotabit* p)
 		break;
 
 	case STOP:
+		PIT_StopTimer(PIT,kPIT_Chnl_0);
 		resetRotabit(p);
+		avanceCancion(p);
 		//PRINTF("Sistema detenido\n");
 		break;
 
