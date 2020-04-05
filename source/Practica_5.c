@@ -5,7 +5,6 @@
 #include "clock_config.h"
 #include "MKL25Z4.h"
 #include "fsl_debug_console.h"
-#include "fsl_gpio.h"
 #include "fsl_pit.h"
 #include "clock_config.h"
 #include "fsl_uart.h"
@@ -23,16 +22,36 @@
 #define PIT_SOURCE_CLOCK CLOCK_GetFreq(kCLOCK_BusClk)
 #define QUARTER_USEC_TO_COUNT(us_4, clockFreqInHz) (uint64_t)((uint64_t)us_4 * clockFreqInHz / 4000000U)
 
-uint32_t flagPIT0 = 0;
-uint32_t flagPIT1 = 0;
+
+/* Cuidar no dejar en diferente GPIO los LEDs de conteo de canción. En caso
+ * de hacerlo, modificar código en donde se cambie de canción. */
+
+#define PUERTO_CANCION_B0   GPIOE  	/* LED A de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_CANCION_B0      2U
+
+#define PUERTO_CANCION_B1   GPIOE  	/* LED B de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_CANCION_B1      3U
+
+#define PUERTO_BOTON_1      GPIOE  	/* BOTON 1 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_BOTON_1         23U
+
+#define PUERTO_BOTON_2      GPIOE  	/* BOTON 2 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_BOTON_2         21U
+
+#define PUERTO_BOTON_3      GPIOE  	/* BOTON 3 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_BOTON_3         22U
+
+
+volatile uint32_t flagPIT0 = 0;
+volatile uint32_t flagPIT1 = 0;
 char bufferMain[10]; //Variable para pruebas
 
 
 void PIT_DriverIRQHandler(void);
 void configPits(void);
 void configUart(void); //Por si se ocupa en un futuro
-void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p);
-void reproducirCancion(GPIO_Type *base);
+void sistemaPrincipal(BotonControl* b, Port_Rotabit* p);
+void reproducirCancion(void);
 
 void PIT_DriverIRQHandler(void)
 {
@@ -83,7 +102,6 @@ void configPits(void)
 
 	EnableIRQ(PIT_IRQn);
 
-
 }
 
 void configUart(void)
@@ -108,7 +126,7 @@ void configUart(void)
 }
 
 
-void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
+void sistemaPrincipal(BotonControl* b, Port_Rotabit* p)
 {
 	switch(b->curr_state)
 	{
@@ -117,9 +135,9 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 		//PRINTF("Reproduciendo Cancion\n");
 
 		if(!atrasar)
-			rotabitRing(base, p);
+			rotabitRing(p);
 		else
-			rotabitRingInvert(base, p);
+			rotabitRingInvert(p);
 
 		break;
 
@@ -128,6 +146,7 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 		break;
 
 	case STOP:
+		resetRotabit(p);
 		//PRINTF("Sistema detenido\n");
 		break;
 
@@ -138,7 +157,7 @@ void sistemaPrincipal(BotonControl* b, GPIO_Type *base, Port_Rotabit* p)
 
 }
 
-void reproducirCancion(GPIO_Type *base)
+void reproducirCancion(void)
 {
 	//char bufer[20];
 	//sprintf(bufer, "Esta sonando: %d\n", cancionActual);
@@ -148,19 +167,23 @@ void reproducirCancion(GPIO_Type *base)
 	{
 
 	case 0:  //EL TRISTE - JOSE JOSE
-		base->PDDR = 0;
+		GPIO_WritePinOutput(PUERTO_CANCION_B0, PIN_CANCION_B0 , 0);
+		GPIO_WritePinOutput(PUERTO_CANCION_B1, PIN_CANCION_B1 , 0);
 		break;
 
 	case 1:
-		base->PDDR = PIN16; //Encender pin16 del puerto
+		GPIO_WritePinOutput(PUERTO_CANCION_B0, PIN_CANCION_B0 , 1);
+		GPIO_WritePinOutput(PUERTO_CANCION_B1, PIN_CANCION_B1 , 0);
 		break;
 
 	case 2:
-		base->PDDR = PIN17; //Encender pin17 del puerto
+		GPIO_WritePinOutput(PUERTO_CANCION_B0, PIN_CANCION_B0 , 0);
+		GPIO_WritePinOutput(PUERTO_CANCION_B1, PIN_CANCION_B1 , 1);
 		break;
 
 	case 3:
-		base->PDDR = PIN16Y17; //Encender pin17 y 16 del puerto
+		GPIO_WritePinOutput(PUERTO_CANCION_B0, PIN_CANCION_B0 , 1);
+		GPIO_WritePinOutput(PUERTO_CANCION_B1, PIN_CANCION_B1 , 1);
 		break;
 
 
@@ -172,28 +195,25 @@ void reproducirCancion(GPIO_Type *base)
 
 int main(void) {
 
-	char prueba[] ="BIENVENIDO\n\n";
-
 	adc16_channel_config_t adc16ChannelConfigStruct;
 
 	/* Init board hardware. */
 	BOARD_InitBootPins();
 	BOARD_InitBootClocks();
-	BOARD_InitBootPeripherals();
 	/* Init FSL debug console. */
 	BOARD_InitDebugConsole();
 
-	//PRINTF("Hello World\n");  //Test UART0 Debug
 
-	configUart();  //UART1
+	//char prueba[] ="BIENVENIDO\n\n";
+	//configUart();  //UART1
+	//UART_WriteBlockingString(UART1, prueba); //UART0 TERMINAL
+
 	configAdc(&adc16ChannelConfigStruct);   // Adc
-	configPwm(); //PWM
 
-	UART_WriteBlockingString(UART1, prueba); //UART0 TERMINAL
 
-	Port_Rotabit PD;
+	Port_Rotabit PR;
 
-	initPortRotabit(&PD, 3); //Numero de leds | Asegurese que los pines de las puerto esten configurados como salidas en LOGICA 1
+	initPortRotabit(&PR, 3); //Numero de leds | Asegurese que los pines de las puerto esten configurados como salidas en LOGICA 1
 
 	BotonControl b1, b2, b3;
 
@@ -218,11 +238,6 @@ int main(void) {
 	b2.curr_state = DISABLED;
 	b3.curr_state = DISABLED;
 
-	//Inicializando Puerto
-
-	PTD->PDDR = 0;
-	PTC->PDDR = 0;
-
 	TIPOS_PRESIONADO presionadoBotones[3];
 
 	presionadoBotones[0] = NO_ACTION;
@@ -230,29 +245,29 @@ int main(void) {
 	presionadoBotones[2] = NO_ACTION;
 
 	configPits();   //Timer0
+	configPwm();
 
 	controlVolumen(&s1, adc16ChannelConfigStruct);
 
-
 	while(1) {
 
-		presionadoBotones[0] = maquinaEstadosPush(PTB, 0, &bd1);
-		presionadoBotones[1] = maquinaEstadosPush(PTB, 1, &bd2);
-		presionadoBotones[2] = maquinaEstadosPush(PTB, 2, &bd3);
+		presionadoBotones[0] = maquinaEstadosPush(PUERTO_BOTON_1, PIN_BOTON_1, &bd1);
+		presionadoBotones[1] = maquinaEstadosPush(PUERTO_BOTON_2, PIN_BOTON_2, &bd2);
+		presionadoBotones[2] = maquinaEstadosPush(PUERTO_BOTON_3, PIN_BOTON_3, &bd3);
 
-		controlBoton1(&b1, presionadoBotones , PTD, &PD);
-		controlBoton2(&b2, presionadoBotones , PTD, &PD);
-		controlBoton3(&b3, presionadoBotones , PTD, &PD);
+		controlBoton1(&b1, presionadoBotones);
+		controlBoton2(&b2, presionadoBotones);
+		controlBoton3(&b3, presionadoBotones);
 
 
 		if(flagPIT0){
 
 			flagPIT0 = 0;
-			sistemaPrincipal(&b1, PTD, &PD);
+			sistemaPrincipal(&b1, &PR);
 			controlVolumen(&s1, adc16ChannelConfigStruct);
 		}
 
-		reproducirCancion(PTC);
+		reproducirCancion();
 
 	}
 

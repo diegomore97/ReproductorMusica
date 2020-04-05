@@ -10,11 +10,8 @@
 
 #define MAX_CANCIONES 3
 #define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
-uint32_t PIN16 = 65536;
-uint32_t PIN17 = 131072;
-uint32_t PIN16Y17 = 196608;
 
-volatile int cancionActual = 0;
+volatile uint8_t cancionActual = 0;
 uint8_t atrasar = 0;
 uint8_t adelantar = 0;
 
@@ -49,9 +46,9 @@ typedef struct
 
 
 void controlBotones(BotonControl* b); //Prototype function
-void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p); //Prototype Function
-void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base,Port_Rotabit* p); //Prototype Function
-void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base,Port_Rotabit* p); //Prototype Function
+void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
+void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
+void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
 
 void initBoton(BotonControl* b)
 {
@@ -72,7 +69,7 @@ void cambiarPeriodo(void)
 
 }
 
-void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p)
+void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP)
 {
 
 	switch(b->curr_state)
@@ -94,10 +91,6 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 
 		else
 		{
-			cancionActual = 0;
-			initBoton(b);
-			base->PDDR = 0; //APAGAR LEDS
-			resetRotabit(p);
 			b->Next_state = STOP;
 		}
 
@@ -112,6 +105,8 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 		}
 		else if(TP[0] == PROLONGADO_RELEASE)
 		{
+			cancionActual = 0;
+			initBoton(b);
 			b->Next_state = STOP;
 		}
 
@@ -136,6 +131,8 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 
 		else if(TP[0] == PROLONGADO_RELEASE)
 		{
+			cancionActual = 0;
+			initBoton(b);
 			b->Next_state = STOP;
 
 		}
@@ -154,7 +151,7 @@ void controlBoton1(BotonControl* b,TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_R
 
 }
 
-void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p)
+void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP)
 {
 
 	switch(b->curr_state)
@@ -210,7 +207,7 @@ void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_
 	b->curr_state = b->Next_state;
 }
 
-void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP, GPIO_Type *base, Port_Rotabit* p)
+void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP)
 {
 
 	switch(b->curr_state)

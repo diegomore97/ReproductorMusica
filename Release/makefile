@@ -28,25 +28,25 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: Practica_3.axf
+all: Practica_5.axf
 
 # Tool invocations
-Practica_3.axf: $(OBJS) $(USER_OBJS)
+Practica_5.axf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU Linker'
-	arm-none-eabi-gcc -nostdlib -Xlinker -Map="Practica_3.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -Xlinker --cref -mcpu=cortex-m0plus -mthumb -T "Practica_2_Release.ld" -o "Practica_3.axf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -nostdlib -Xlinker -Map="Practica_5.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -Xlinker --cref -mcpu=cortex-m0plus -mthumb -T "Practica_2_Release.ld" -o "Practica_5.axf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build
 
 # Other Targets
 clean:
-	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) Practica_3.axf
+	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) Practica_5.axf
 	-@echo ' '
 
 post-build:
 	-@echo 'Performing post-build steps'
-	-arm-none-eabi-size "Practica_3.axf"; # arm-none-eabi-objcopy -v -O binary "Practica_3.axf" "Practica_3.bin" ; # checksum -p MKL25Z128xxx4 -d "Practica_3.bin";
+	-arm-none-eabi-size "Practica_5.axf"; # arm-none-eabi-objcopy -v -O binary "Practica_5.axf" "Practica_5.bin" ; # checksum -p MKL25Z128xxx4 -d "Practica_5.bin";
 	-@echo ' '
 
 .PHONY: all clean dependents post-build

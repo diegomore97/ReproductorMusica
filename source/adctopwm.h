@@ -11,14 +11,12 @@
 #define DEMO_ADC16_BASE ADC0
 #define DEMO_ADC16_CHANNEL_GROUP 0U
 #define DEMO_ADC16_USER_CHANNEL 0U /*PTE20, ADC0_SE0 */
-#define BOARD_TPM_BASEADDR TPM2
-#define BOARD_TPM_CHANNEL 1U
 
-#define TPM_CHANNEL_INTERRUPT_ENABLE kTPM_Chnl1InterruptEnable /* Interrupt to enable and flag to read; depends on the TPM channel used */
-#define TPM_CHANNEL_FLAG kTPM_Chnl1Flag /* Interrupt number and interrupt handler for the TPM instance used */
-#define TPM_INTERRUPT_NUMBER TPM2_IRQn
-#define TPM_LED_HANDLER TPM2_IRQHandler
-#define TPM_SOURCE_CLOCK CLOCK_GetFreq(kCLOCK_PllFllSelClk)/* Get source clock for TPM driver */
+
+#define BOARD_TPM_BASEADDR TPM0
+#define BOARD_TPM_CHANNEL 2U  //PTE29
+#define TPM_SOURCE_CLOCK CLOCK_GetFreq(kCLOCK_PllFllSelClk)
+
 
 #define AVANCE_PWM 10
 #define MAXIMO_PWM 4095
@@ -44,7 +42,7 @@ char buffer[25]; //Variable para pruebas
 
 
 void configPwm(void);
-void outputPwm(uint8_t dutyCyclePwm, tpm_pwm_level_select_t pwmLevel);
+void outputPwm(uint8_t dutyCyclePwm);
 void configAdc(adc16_channel_config_t* adc16ChannelConfigStruct);
 uint16_t readAdc(adc16_channel_config_t adc16ChannelConfigStruct);
 void adctopwm(SensorPwm* s);
@@ -62,15 +60,13 @@ void initSensorPwm(SensorPwm* s)
 void configPwm(void)
 {
 	tpm_config_t tpmInfo;
+	tpm_pwm_level_select_t pwmLevel = kTPM_HighTrue;
 	tpm_chnl_pwm_signal_param_t tpmParam;
-	tpm_pwm_level_select_t pwmLevel = kTPM_LowTrue;
 
-	/* Configure tpm params with frequency 24kHZ */
 	tpmParam.chnlNumber = (tpm_chnl_t)BOARD_TPM_CHANNEL;
 	tpmParam.level = pwmLevel;
-	tpmParam.dutyCyclePercent = updatedDutycycle;
+	tpmParam.dutyCyclePercent = 0;
 
-	/* Select the clock source for the TPM counter as kCLOCK_PllFllSelClk */
 	CLOCK_SetTpmClock(1U);
 
 	TPM_GetDefaultConfig(&tpmInfo);
@@ -124,19 +120,9 @@ uint16_t readAdc(adc16_channel_config_t adc16ChannelConfigStruct)
 
 }
 
-void outputPwm(uint8_t dutyCyclePwm, tpm_pwm_level_select_t pwmLevel)
+void outputPwm(uint8_t dutyCyclePwm)
 {
-	updatedDutycycle = dutyCyclePwm;
-
-	/* Disable channel output before updating the dutycycle */
-	TPM_UpdateChnlEdgeLevelSelect(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, 0U);
-
-	/* Update PWM duty cycle */
-	TPM_UpdatePwmDutycycle(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, kTPM_CenterAlignedPwm,
-			updatedDutycycle);
-
-	/* Start channel output with updated dutycycle */
-	TPM_UpdateChnlEdgeLevelSelect(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, pwmLevel);
+	TPM_UpdatePwmDutycycle(BOARD_TPM_BASEADDR, (tpm_chnl_t)BOARD_TPM_CHANNEL, kTPM_CenterAlignedPwm, dutyCyclePwm);
 
 }
 
@@ -176,7 +162,7 @@ void controlVolumen(SensorPwm* s, adc16_channel_config_t canal)
 		case PWMOUTPUT:
 			//sprintf(buffer,"Ciclo de Trabajo: %d\n", s->dutyCyclePwm);
 			//PRINTF(buffer);
-			outputPwm(s->dutyCyclePwm,kTPM_HighTrue);
+			outputPwm(s->dutyCyclePwm);
 			s->Next_state = LEERADC;
 			finish = 1;
 			break;
