@@ -15,8 +15,6 @@ volatile uint8_t cancionActual = 0;
 uint8_t atrasar = 0;
 uint8_t adelantar = 0;
 
-void cambiarPeriodo(void);
-
 
 typedef enum
 {
@@ -48,11 +46,20 @@ typedef struct
 void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
 void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
 void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
+void apagarRotabit(void);
+void cambiarPeriodo(void);
 
 void initBoton(BotonControl* b)
 {
 	b->Next_state = 1; //NO ES NUMERO MAGICO MIS ESTADOS SIEMPRE COMIENZAN EN 1
 	b->curr_state = 1; //NO ES NUMERO MAGICO MIS ESTADOS SIEMPRE COMIENZAN EN 1
+}
+
+void apagarRotabit(void)
+{
+	GPIO_WritePinOutput(PUERTO_ROTABIT_B0, PIN_ROTABIT_B0 , 0);
+	GPIO_WritePinOutput(PUERTO_ROTABIT_B1, PIN_ROTABIT_B1 , 0);
+	GPIO_WritePinOutput(PUERTO_ROTABIT_B2, PIN_ROTABIT_B2 , 0);
 }
 
 void cambiarPeriodo(void)
@@ -76,6 +83,8 @@ void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP)
 
 	case STOP:
 
+		PIT_StopTimer(PIT,kPIT_Chnl_0);
+
 		if(TP[0] == NORMAL)
 		{
 			PIT_StartTimer(PIT,kPIT_Chnl_0);
@@ -88,6 +97,7 @@ void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP)
 
 		else
 		{
+			apagarRotabit();
 			b->Next_state = STOP;
 		}
 
