@@ -45,7 +45,6 @@ typedef struct
 }BotonControl;
 
 
-void controlBotones(BotonControl* b); //Prototype function
 void controlBoton1(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
 void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
 void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP); //Prototype Function
@@ -159,7 +158,7 @@ void controlBoton2(BotonControl* b, TIPOS_PRESIONADO* TP)
 
 		if(TP[1] == NORMAL)
 		{
-			PRINTF("SIGUIENTE CANCION\n");
+			//PRINTF("SIGUIENTE CANCION\n");
 			cancionActual+=1;
 
 			if(cancionActual > MAX_CANCIONES)
@@ -215,7 +214,7 @@ void controlBoton3(BotonControl* b, TIPOS_PRESIONADO* TP)
 
 		if(TP[2] == NORMAL)
 		{
-			PRINTF("CANCION ANTERIOR\n");
+			//PRINTF("CANCION ANTERIOR\n");
 			cancionActual-=1;
 
 			if(cancionActual < 0)

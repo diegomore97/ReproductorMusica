@@ -42,16 +42,22 @@
 #define PIN_BOTON_3         22U
 
 
+char bufferMain[10]; //Variable para pruebas
 volatile uint32_t flagPIT0 = 0;
 volatile uint32_t flagPIT1 = 0;
-char bufferMain[10]; //Variable para pruebas
+BOTON_DEBOUNCE botonesDebounce[3];
+TIPOS_PRESIONADO presionadoBotones[3];
+BotonControl botonesControl[3];
+
 
 
 void PIT_DriverIRQHandler(void);
 void configPits(void);
 void configUart(void); //Por si se ocupa en un futuro
-void sistemaPrincipal(BotonControl* b, Port_Rotabit* p);
+void sistemaPrincipal(Port_Rotabit* p);
 void reproducirCancion(void);
+void evaluarPresionadoBotones(void);
+void evaluarAccionBotones(void);
 
 void PIT_DriverIRQHandler(void)
 {
@@ -64,8 +70,8 @@ void PIT_DriverIRQHandler(void)
 
 		if(counterPush!=0xFFFFFFFF)
 		{
-			sprintf(bufferMain, "%d\n",counterPush);
-			PRINTF(bufferMain);
+			//sprintf(bufferMain, "%d\n",counterPush);
+			//PRINTF(bufferMain);
 			counterPush++;
 		}
 
@@ -126,9 +132,9 @@ void configUart(void)
 }
 
 
-void sistemaPrincipal(BotonControl* b, Port_Rotabit* p)
+void sistemaPrincipal(Port_Rotabit* p)
 {
-	switch(b->curr_state)
+	switch(botonesControl[0].curr_state)
 	{
 
 	case PLAY:
@@ -195,6 +201,21 @@ void reproducirCancion(void)
 
 }
 
+void evaluarPresionadoBotones(void)
+{
+	presionadoBotones[0] = maquinaEstadosPush(PUERTO_BOTON_1, PIN_BOTON_1, botonesDebounce);
+	presionadoBotones[1] = maquinaEstadosPush(PUERTO_BOTON_2, PIN_BOTON_2, botonesDebounce+1); //Pasando la celda 1
+	presionadoBotones[2] = maquinaEstadosPush(PUERTO_BOTON_3, PIN_BOTON_3, botonesDebounce+2); //Pasando la celda 2
+}
+
+void evaluarAccionBotones(void)
+{
+	controlBoton1(botonesControl,   presionadoBotones);
+	controlBoton2(botonesControl+1, presionadoBotones); //Pasando la celda 1
+	controlBoton3(botonesControl+2, presionadoBotones); //Pasando la celda 2
+
+}
+
 int main(void) {
 
 	adc16_channel_config_t adc16ChannelConfigStruct;
@@ -204,7 +225,6 @@ int main(void) {
 	BOARD_InitBootClocks();
 	/* Init FSL debug console. */
 	BOARD_InitDebugConsole();
-
 
 	//char prueba[] ="BIENVENIDO\n\n";
 	//configUart();  //UART1
@@ -217,30 +237,26 @@ int main(void) {
 
 	initPortRotabit(&PR, 3); //Numero de leds | Asegurese que los pines de las puerto esten configurados como salidas en LOGICA 1
 
-	BotonControl b1, b2, b3;
-
 	SensorPwm s1; // Representa al potenciometro
 
 	initSensorPwm(&s1); //Inicializando variable
 
 	//Inicializando Maquinas de estado de los botones a utilizar
-	initBoton(&b1);
-	initBoton(&b2);
-	initBoton(&b3);
+	initBoton(botonesControl);
+	initBoton(botonesControl+1); //Pasando la celda 1
+	initBoton(botonesControl+2); //Pasando la celda 2
+
+	botonesControl[0].curr_state = DISABLED;
+	botonesControl[1].curr_state = DISABLED;
+	botonesControl[2].curr_state = DISABLED;
+
 
 	//Variables para antirebote
 
-	BOTON_DEBOUNCE bd1, bd2, bd3;
+	inicializarBotonDebounce(botonesDebounce);
+	inicializarBotonDebounce(botonesDebounce+1); //Pasando la celda 1
+	inicializarBotonDebounce(botonesDebounce+2); //Pasando la celda 2
 
-	inicializarBotonDebounce(&bd1);
-	inicializarBotonDebounce(&bd2);
-	inicializarBotonDebounce(&bd3);
-
-	b1.curr_state = DISABLED;
-	b2.curr_state = DISABLED;
-	b3.curr_state = DISABLED;
-
-	TIPOS_PRESIONADO presionadoBotones[3];
 
 	presionadoBotones[0] = NO_ACTION;
 	presionadoBotones[1] = NO_ACTION;
@@ -251,25 +267,21 @@ int main(void) {
 
 	controlVolumen(&s1, adc16ChannelConfigStruct);
 
+	PRINTF("REPRODUCTOR DE MUSICA INICIADO\n\n");
+
 	while(1) {
 
-		presionadoBotones[0] = maquinaEstadosPush(PUERTO_BOTON_1, PIN_BOTON_1, &bd1);
-		presionadoBotones[1] = maquinaEstadosPush(PUERTO_BOTON_2, PIN_BOTON_2, &bd2);
-		presionadoBotones[2] = maquinaEstadosPush(PUERTO_BOTON_3, PIN_BOTON_3, &bd3);
-
-		controlBoton1(&b1, presionadoBotones);
-		controlBoton2(&b2, presionadoBotones);
-		controlBoton3(&b3, presionadoBotones);
-
+		evaluarPresionadoBotones();
+		evaluarAccionBotones();
 
 		if(flagPIT0){
 
 			flagPIT0 = 0;
-			sistemaPrincipal(&b1, &PR);
-			controlVolumen(&s1, adc16ChannelConfigStruct);
+			sistemaPrincipal(&PR);
 		}
 
 		reproducirCancion();
+		controlVolumen(&s1, adc16ChannelConfigStruct);
 
 	}
 

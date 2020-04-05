@@ -93,11 +93,11 @@ void configAdc(adc16_channel_config_t* adc16ChannelConfigStruct )
 #if defined(FSL_FEATURE_ADC16_HAS_CALIBRATION) && FSL_FEATURE_ADC16_HAS_CALIBRATION
 	if (kStatus_Success == ADC16_DoAutoCalibration(DEMO_ADC16_BASE))
 	{
-		PRINTF("ADC16_DoAutoCalibration() Done.\r\n");
+		//PRINTF("ADC16_DoAutoCalibration() Done.\r\n");
 	}
 	else
 	{
-		PRINTF("ADC16_DoAutoCalibration() Failed.\r\n");
+		//PRINTF("ADC16_DoAutoCalibration() Failed.\r\n");
 	}
 #endif /* FSL_FEATURE_ADC16_HAS_CALIBRATION */
 
