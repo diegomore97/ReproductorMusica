@@ -11,6 +11,35 @@
 #define MAX_CANCIONES 3
 #define PIT_CLK_SRC_HZ_HP ((uint64_t)24000000)
 
+/* Cuidar no dejar en diferente GPIO los LEDs de conteo de canción. En caso
+ * de hacerlo, modificar código en donde se cambie de canción. */
+
+
+#define PUERTO_ROTABIT_B0   GPIOE  	/* LED 1 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_ROTABIT_B0      30U
+
+#define PUERTO_ROTABIT_B1   GPIOE  	/* LED 2 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_ROTABIT_B1      5U
+
+#define PUERTO_ROTABIT_B2   GPIOE  	/* LED 3 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_ROTABIT_B2      4U
+
+#define PUERTO_CANCION_B0   GPIOE  	/* LED A de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_CANCION_B0      2U
+
+#define PUERTO_CANCION_B1   GPIOE  	/* LED B de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_CANCION_B1      3U
+
+#define PUERTO_BOTON_1      GPIOE  	/* BOTON 1 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_BOTON_1         23U
+
+#define PUERTO_BOTON_2      GPIOE  	/* BOTON 2 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_BOTON_2         21U
+
+#define PUERTO_BOTON_3      GPIOE  	/* BOTON 3 de acuerdo a PDF de requerimientos de la práctica */
+#define PIN_BOTON_3         22U
+
+
 volatile uint8_t cancionActual = 0;
 uint8_t atrasar = 0;
 uint8_t adelantar = 0;

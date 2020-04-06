@@ -8,14 +8,6 @@
 #ifndef ROTABIT_H_
 #define ROTABIT_H_
 
-#define PUERTO_ROTABIT_B0   GPIOE  	/* LED 1 de acuerdo a PDF de requerimientos de la práctica */
-#define PIN_ROTABIT_B0      30U
-
-#define PUERTO_ROTABIT_B1   GPIOE  	/* LED 2 de acuerdo a PDF de requerimientos de la práctica */
-#define PIN_ROTABIT_B1      5U
-
-#define PUERTO_ROTABIT_B2   GPIOE  	/* LED 3 de acuerdo a PDF de requerimientos de la práctica */
-#define PIN_ROTABIT_B2      4U
 
 typedef enum
 {
@@ -148,7 +140,7 @@ void rotabitRingInvert(Port_Rotabit* p)
 
 		p->counter--;
 
-		if (p->counter == 1){
+		if (p->counter == 1 || p->counter == 0){
 			p->Next_state = START;
 		}
 		else
